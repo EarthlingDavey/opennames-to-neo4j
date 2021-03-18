@@ -1,0 +1,16 @@
+{
+  "name": "opennames-to-neo4j",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "start:dev": "nodemon --watch src --ext js --exec babel-node  src/index.js"
+  },
+  "author": "davey",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/node": "^7.12.10",
+    "nodemon": "^1.19.1"
+  }
+}
