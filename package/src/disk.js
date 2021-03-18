@@ -1,12 +1,12 @@
-import fs from 'fs-extra';
-import extract from 'extract-zip';
+import fs from "fs-extra";
+import extract from "extract-zip";
 
 const getZipVersion = async (productId) => {
-  console.debug('>>>>>> in getZipVersion');
+  console.debug(">>>>>> in getZipVersion");
 
   try {
     const dir = await fs.readdir(`/tmp/os/${productId}`);
-    console.log('success!', dir);
+    console.log("success!", dir);
   } catch (err) {
     console.error(err);
     return undefined;
@@ -14,12 +14,12 @@ const getZipVersion = async (productId) => {
 };
 
 const extractZip = async (zipFilePath, extractTarget) => {
-  console.debug('>>>>>> in extractZip');
+  console.debug(">>>>>> in extractZip");
   console.log(extractTarget);
-  return true;
+  // return true;
   try {
     await extract(zipFilePath, { dir: extractTarget });
-    console.log('Extraction complete');
+    console.log("Extraction complete");
     return true;
   } catch (err) {
     // handle any errors
@@ -29,7 +29,7 @@ const extractZip = async (zipFilePath, extractTarget) => {
 };
 
 const getFilesArray = async (dir) => {
-  console.debug('>>>>>> in getFilesArray');
+  console.debug(">>>>>> in getFilesArray");
 
   // const dirs = getDirs(version);
 
@@ -39,7 +39,7 @@ const getFilesArray = async (dir) => {
     if (!allFiles || !allFiles.length) {
       return false;
     }
-    return allFiles.filter((filename) => filename.endsWith('.csv'));
+    return allFiles.filter((filename) => filename.endsWith(".csv"));
   } catch (err) {
     console.error(err);
     return undefined;

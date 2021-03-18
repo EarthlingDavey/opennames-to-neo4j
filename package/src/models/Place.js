@@ -1,35 +1,52 @@
-async function processPlaces(dataSource, headers) {
-  console.log('>>>>>> in processPlaces');
+import fs from "fs-extra";
+import path from "path";
+import proj4 from "proj4";
+import csv from "fast-csv";
+import csvWriter from "csv-write-stream";
 
-  console.log({ dataSource });
-  return;
+async function processPlaces(dataSource, headers, options, productId) {
+  console.log(">>>>>> in processPlaces");
 
-  const { file, id, version } = dataSource;
+  // console.log({ dataSource });
 
-  const dataSourceHeaders = await readDataSourceHeaders(version);
+  const { fileName, filePath, id, version, importFilePath } = dataSource;
 
-  // console.log({ dataSourceHeaders });
+  console.log({ fileName, filePath, id, version, importFilePath });
 
-  const dirs = getDirs(version);
+  // return;
 
-  // const importFilePath = path.resolve('./data', file);
-  const importFilePath = path.resolve(dirs.neo4jImport, file);
-
-  var writer = csvWriter({
+  const writer = csvWriter({
     headers: [
-      'id',
-      'name',
-      'slug',
-      'type',
-      'county',
-      'postcodeDistrict',
-      'lat',
-      'lng',
-      'populatedPlaceId',
+      "id",
+      "name",
+      "slug",
+      "type",
+      "county",
+      "postcodeDistrict",
+      "lat",
+      "lng",
+      "populatedPlaceId",
     ],
   });
 
   writer.pipe(fs.createWriteStream(importFilePath));
+
+  writer.write({
+    id: "test",
+    name: "test",
+    slug: "test",
+    type: "test",
+    county: "test",
+    postcodeDistrict: "test",
+    lat: "test",
+    lng: "test",
+    populatedPlaceId: "test",
+  });
+
+  // TODO: remove
+  writer.end();
+
+  return;
 
   const csvParsePromise = new Promise((resolve, reject) => {
     fs.createReadStream(path.resolve(dirs.data, file))
@@ -38,18 +55,18 @@ async function processPlaces(dataSource, headers) {
           .parse({ headers: dataSourceHeaders })
           .validate(
             (data) =>
-              allowedTYPES.includes(data['TYPE']) &&
-              allowedLOCAL_TYPES.includes(data['LOCAL_TYPE'])
+              allowedTYPES.includes(data["TYPE"]) &&
+              allowedLOCAL_TYPES.includes(data["LOCAL_TYPE"])
           )
       )
-      .on('error', (error) => console.error(error))
-      .on('data', async (row) => {
+      .on("error", (error) => console.error(error))
+      .on("data", async (row) => {
         const processedData = await processRow(row);
         if (processedData) {
           writer.write(processedData);
         }
       })
-      .on('end', async () => {
+      .on("end", async () => {
         // console.log(`${id} in readPlaces end `);
         dataSource.processed = version;
         resolve(dataSource);
