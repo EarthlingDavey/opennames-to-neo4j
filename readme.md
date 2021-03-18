@@ -4,6 +4,8 @@ The package is to automate the download and import of OpenNames data to a neo4j 
 
 ## Use
 
+1. Sign up for API access at https://osdatahub.os.uk/
+
 ## Local development
 
 This repository includes:
