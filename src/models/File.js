@@ -21,9 +21,9 @@ const extractZip = async (zipFilePath, extractTarget) => {
     await extract(zipFilePath, { dir: extractTarget });
     console.log('Extraction complete');
     return true;
-  } catch (err) {
+  } catch (error) {
     // handle any errors
-    console.error({ err });
+    console.error('error extracting zip', { error });
     return false;
   }
 };
@@ -40,8 +40,8 @@ const getFilesArray = async (dir) => {
       return false;
     }
     return allFiles.filter((filename) => filename.endsWith('.csv'));
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error('error array of files was empty', { error });
     return undefined;
   }
 };

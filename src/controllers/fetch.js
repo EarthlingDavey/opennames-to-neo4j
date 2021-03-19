@@ -1,14 +1,13 @@
 import path from 'path';
 import fs from 'fs-extra';
 
-import { maybeDownloadProduct } from '../os.js ';
-import { extractZip, getFilesArray, deleteFiles } from '../disk.js';
+import { maybeDownloadProduct } from '../models/Product.js';
+
+import { extractZip, getFilesArray } from '../models/File.js';
 
 import {
   readDataSourceHeaders,
-  getDbDataSources,
   dbSaveDataSources,
-  updateDataSource,
 } from '../models/DataSource.js';
 
 const fetchDataSources = async (session, productId, options, apiVersion) => {
@@ -18,36 +17,26 @@ const fetchDataSources = async (session, productId, options, apiVersion) => {
 
   const zipFilePath = await maybeDownloadProduct(productId, apiVersion);
 
-  if (!zipFilePath) {
-    console.error('error downloading zip');
-    return;
-  }
+  if (!zipFilePath) return;
 
   const extractTarget = `/tmp/os/${productId}/${apiVersion}`;
 
   const extracted = await extractZip(zipFilePath, extractTarget);
 
-  if (!extracted) {
-    console.error('error extracting zip');
-    return;
-  }
+  if (!extracted) return;
 
   const dataDir = `${extractTarget}/DATA`;
   const filesArray = await getFilesArray(dataDir);
 
-  if (!filesArray) {
-    console.error('error array of files was empty');
-    return;
-  }
+  if (!filesArray) return;
 
   const headers = await readDataSourceHeaders(extractTarget);
 
-  if (!headers) {
-    console.error('error could not read csv headers');
-    return;
-  }
+  if (!headers) return;
 
   // Write some data to the db to say that extraction was completed ok.
+
+  // TODO: helper function for paths
 
   const importFileDir = path.resolve(
     dirs.neo4jImport,
@@ -55,8 +44,6 @@ const fetchDataSources = async (session, productId, options, apiVersion) => {
     productId,
     apiVersion
   );
-
-  console.log({ importFileDir });
 
   const dbDataSources = await dbSaveDataSources(
     session,

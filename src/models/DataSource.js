@@ -15,7 +15,7 @@ const readDataSourceHeaders = async (dir) => {
     });
     return headers;
   } catch (error) {
-    console.log(error);
+    console.error('error could not read csv headers', error);
     return false;
   }
 };

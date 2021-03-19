@@ -1,21 +1,18 @@
-import { getOsProductVersion, maybeDownloadProduct } from './os.js ';
-
-import { getSession } from './db.js';
-
-import {
-  readDataSourceHeaders,
-  getDbDataSources,
-  dbSaveDataSources,
-  updateDataSource,
-} from './models/DataSource.js';
-
+/**
+ * Models.
+ */
+import { getDbDataSources, updateDataSource } from './models/DataSource.js';
+import { deleteFiles } from './models/File.js';
 import { processPlaces, importPlaces } from './models/Place.js';
-
-import { extractZip, getFilesArray, deleteFiles } from './disk.js';
-
+import { getOsProductVersion } from './models/Product.js';
+/**
+ * Helpers.
+ */
+import { getNeo4jSession, mergeByProperty } from './utils/utils.js';
+/**
+ * Fetch.
+ */
 import { fetchDataSources } from './controllers/fetch.js';
-
-import { mergeByProperty } from './utils/utils.js';
 
 /**
  * Ensure the main function is passed a database session.
@@ -36,7 +33,7 @@ const sessionWrapper = async (connection = {}, options) => {
    * Start a neo4j db session.
    */
 
-  const { session, shouldCloseSession } = getSession(connection);
+  const { session, shouldCloseSession } = getNeo4jSession(connection);
 
   const dataSources = await main(session, options);
 
@@ -52,6 +49,13 @@ const sessionWrapper = async (connection = {}, options) => {
 };
 
 const main = async (session, options) => {
+  // TODO: Allow for serving of processed csv files.
+  // in-case db is not sharing a volume with the app.
+
+  // TODO: return a summary
+  // TODO: only do x first DataSources
+
+  // TODO: remove need for productId
   const productId = 'OpenNames';
 
   /**
