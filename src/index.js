@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 
 import { getOsProductVersion, maybeDownloadProduct } from './os.js ';
 
@@ -13,7 +14,7 @@ import {
 
 import { processPlaces, importPlaces } from './models/Place.js';
 
-import { extractZip, getFilesArray } from './disk.js';
+import { extractZip, getFilesArray, deleteFiles } from './disk.js';
 
 console.log('hello world');
 
@@ -94,7 +95,9 @@ const main = async (productId, options) => {
    * Import
    */
 
-  const toImport = dataSources.filter((x) => x.processed && !x.imported);
+  const toImport = dataSources.filter(
+    (x) => x.processed && !x.imported && x.validRows > 0
+  );
 
   if (toImport.length) {
     for (const dataSource of toImport) {
@@ -119,13 +122,31 @@ const main = async (productId, options) => {
    */
 
   const toCleanUp = dataSources.filter(
-    (x) => x.processed && x.imported && !x.cleaned
+    (x) => x.processed && (x.imported || 0 === x.validRows) && !x.cleaned
   );
 
   if (toCleanUp.length) {
+    // let result = objArray.map(({ foo }) => foo);
+
     for (const dataSource of toCleanUp) {
-      console.log('do clean up');
-      // console.log({ dataSource });
+      const deleteSuccess = await deleteFiles([
+        dataSource.importFilePath,
+        dataSource.filePath,
+      ]);
+
+      if (!deleteSuccess) {
+        console.error('clean up failed to delete files for dataSource', {
+          dataSource,
+        });
+        continue;
+      }
+
+      const updatedDataSource = await updateDataSource(session, {
+        id: dataSource.id,
+        cleaned: true,
+      });
+
+      console.log({ updatedDataSource });
     }
   }
 

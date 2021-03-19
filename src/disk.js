@@ -1,12 +1,12 @@
-import fs from "fs-extra";
-import extract from "extract-zip";
+import fs from 'fs-extra';
+import extract from 'extract-zip';
 
 const getZipVersion = async (productId) => {
-  console.debug(">>>>>> in getZipVersion");
+  console.debug('>>>>>> in getZipVersion');
 
   try {
     const dir = await fs.readdir(`/tmp/os/${productId}`);
-    console.log("success!", dir);
+    console.log('success!', dir);
   } catch (err) {
     console.error(err);
     return undefined;
@@ -14,12 +14,12 @@ const getZipVersion = async (productId) => {
 };
 
 const extractZip = async (zipFilePath, extractTarget) => {
-  console.debug(">>>>>> in extractZip");
+  console.debug('>>>>>> in extractZip');
   console.log(extractTarget);
   // return true;
   try {
     await extract(zipFilePath, { dir: extractTarget });
-    console.log("Extraction complete");
+    console.log('Extraction complete');
     return true;
   } catch (err) {
     // handle any errors
@@ -29,7 +29,7 @@ const extractZip = async (zipFilePath, extractTarget) => {
 };
 
 const getFilesArray = async (dir) => {
-  console.debug(">>>>>> in getFilesArray");
+  console.debug('>>>>>> in getFilesArray');
 
   // const dirs = getDirs(version);
 
@@ -39,11 +39,57 @@ const getFilesArray = async (dir) => {
     if (!allFiles || !allFiles.length) {
       return false;
     }
-    return allFiles.filter((filename) => filename.endsWith(".csv"));
+    return allFiles.filter((filename) => filename.endsWith('.csv'));
   } catch (err) {
     console.error(err);
     return undefined;
   }
 };
 
-export { getZipVersion, extractZip, getFilesArray };
+const deleteFile = async (file) => {
+  console.debug('>>>>>> in deleteFile');
+
+  try {
+    const fileExists = await fs.existsSync(file);
+    if (!fileExists) return false;
+
+    const delResult = await fs.unlink(file);
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+
+  console.log('exists and deleted OK');
+  return true;
+};
+
+const deleteFiles = async (files) => {
+  console.debug('>>>>>> in deleteFiles');
+
+  let failed = 0;
+
+  for (const file of files) {
+    const didDelete = await deleteFile(file);
+    if (!didDelete) {
+      failed++;
+    }
+  }
+
+  return 0 === failed;
+
+  // const dirs = getDirs(version);
+
+  try {
+    const allFiles = await fs.readdir(dir);
+    // console.log('success!', allFiles);
+    if (!allFiles || !allFiles.length) {
+      return false;
+    }
+    return allFiles.filter((filename) => filename.endsWith('.csv'));
+  } catch (err) {
+    console.error(err);
+    return undefined;
+  }
+};
+
+export { getZipVersion, extractZip, getFilesArray, deleteFiles };

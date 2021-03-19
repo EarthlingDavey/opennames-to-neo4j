@@ -155,7 +155,8 @@ const updateDataSource = async (session, processedDataSource) => {
         importFilePath: d.importFilePath,
         processed: d.processed,
         imported: d.imported,
-        cleaned: d.cleaned
+        cleaned: d.cleaned,
+        validRows: d.validRows
       } AS dataSource
       `,
       {

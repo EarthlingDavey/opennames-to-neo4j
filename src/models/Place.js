@@ -25,7 +25,8 @@ async function processPlaces(dataSource, headers, options, productId) {
 
   writer.pipe(fs.createWriteStream(importFilePath));
 
-  let csvParseResultPromise;
+  let csvParseResultPromise,
+    validRows = 0;
 
   try {
     csvParseResultPromise = await new Promise((resolve, reject) => {
@@ -44,13 +45,16 @@ async function processPlaces(dataSource, headers, options, productId) {
           reject(error);
         })
         .on('data', async (row) => {
+          validRows++;
           const processedData = await processRow(row);
           if (processedData) {
             writer.write(processedData);
           }
         })
-        .on('end', async () => {
+        .on('end', async (a, b) => {
+          console.log({ validRows });
           dataSource.processed = true;
+          dataSource.validRows = validRows;
           resolve(dataSource);
           return;
         });
@@ -133,9 +137,9 @@ async function importPlaces(session, dataSource) {
       dataSourceId: dataSource.id,
       importFilePath: importFilePath.replace('/tmp/import', '/shared'),
     });
-    const count = result.records[0].get('count');
+    const count = result.records[0]?.get('count');
 
-    const importedDataSource = result.records[0].get('importedDataSource');
+    const importedDataSource = result.records[0]?.get('importedDataSource');
 
     return importedDataSource;
   } catch (error) {
