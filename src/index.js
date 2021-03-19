@@ -8,6 +8,7 @@ import {
   readDataSourceHeaders,
   getDbDataSources,
   dbSaveDataSources,
+  updateDataSource,
 } from './models/DataSource.js';
 
 import { processPlaces } from './models/Place.js';
@@ -55,9 +56,54 @@ const main = async (productId, options) => {
   // console.log(toProcess);
 
   if (toProcess.length) {
-    toProcess.forEach((dataSource) => {
-      processPlaces(dataSource, headers, options, productId);
-    });
+    for (const dataSource of toProcess) {
+      const processedDataSource = await processPlaces(
+        dataSources[0],
+        headers,
+        options,
+        productId
+      );
+      if (!processedDataSource) {
+        console.error('dataSource failed to process', { dataSource });
+        continue;
+      }
+
+      const updatedDataSource = await updateDataSource(
+        session,
+        processedDataSource
+      );
+      if (!updatedDataSource) {
+        console.error('dataSource failed to update in db', {
+          processedDataSource,
+        });
+        continue;
+      }
+      // Update the dataSources source of truth here.
+      const foundIndex = dataSources.findIndex(
+        (x) => x.id == updatedDataSource.id
+      );
+      if (foundIndex >= 0) {
+        dataSources[foundIndex] = updatedDataSource;
+      }
+    }
+  }
+
+  const toImport = dataSources.filter((x) => x.processed && !x.imported);
+
+  if (toImport.length) {
+    for (const dataSource of toImport) {
+      console.log({ dataSource });
+    }
+  }
+
+  const toCleanUp = dataSources.filter(
+    (x) => x.processed && x.imported && !x.cleaned
+  );
+
+  if (toCleanUp.length) {
+    for (const dataSource of toCleanUp) {
+      console.log({ dataSource });
+    }
   }
 
   // console.log(toProcess);
@@ -67,6 +113,7 @@ const main = async (productId, options) => {
   //   await dbImport(session, productId, extractTarget);
   // }
 
+  console.log('closing session');
   session.close();
 
   // console.log({ zipFilePath });
@@ -150,5 +197,7 @@ const getDataSources = async (session, productId, options, apiVersion) => {
 const helloFromOpennamesToNeo4j = () => {
   console.log('helloFromOpennamesToNeo4j');
 };
+
+export default main;
 
 export { helloFromOpennamesToNeo4j };

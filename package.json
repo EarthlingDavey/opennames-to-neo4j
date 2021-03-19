@@ -1,7 +1,6 @@
 {
-  "name": "opennames-to-neo4j",
+  "name": "@usedandloved/opennames-to-neo4j",
   "version": "0.0.1",
-  "description": "",
   "type": "module",
   "scripts": {
     "start:dev": "nodemon --watch src --ext js --exec babel-node  src/index.js"
@@ -22,5 +21,15 @@
     "@babel/core": "^7.12.10",
     "@babel/node": "^7.12.10",
     "nodemon": "^1.19.1"
-  }
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EarthlingDavey/opennames-to-neo4j.git"
+  },
+  "bugs": {
+    "url": "https://github.com/EarthlingDavey/opennames-to-neo4j/issues"
+  },
+  "homepage": "https://github.com/EarthlingDavey/opennames-to-neo4j#readme",
+  "description": ""
 }

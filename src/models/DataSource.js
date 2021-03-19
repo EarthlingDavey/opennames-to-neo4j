@@ -1,17 +1,17 @@
-import fs from "fs-extra";
-import csv from "fast-csv";
+import fs from 'fs-extra';
+import csv from 'fast-csv';
 
 const readDataSourceHeaders = async (dir) => {
-  console.log(">>>>>> Start readDataSourceHeaders");
+  console.log('>>>>>> Start readDataSourceHeaders');
   const filePath = `${dir}/DOC/OS_Open_Names_Header.csv`;
   try {
     const headers = await new Promise((resolve, reject) => {
       let headers = [];
       fs.createReadStream(filePath)
         .pipe(csv.parse({ headers: false }))
-        .on("error", (error) => console.error(error))
-        .on("data", (row) => (headers = row))
-        .on("end", () => resolve(headers));
+        .on('error', (error) => console.error(error))
+        .on('data', (row) => (headers = row))
+        .on('end', () => resolve(headers));
     });
     return headers;
   } catch (error) {
@@ -21,7 +21,7 @@ const readDataSourceHeaders = async (dir) => {
 };
 
 const getDbDataSources = async (session, productId, version) => {
-  console.log(">>>>>> Start getDbDataSources");
+  console.log('>>>>>> Start getDbDataSources');
   console.log({ productId, version });
 
   try {
@@ -50,8 +50,8 @@ const getDbDataSources = async (session, productId, version) => {
       }
     );
     return {
-      dataSources: result.records[0]?.get("dataSource"),
-      headers: result.records[0]?.get("headers"),
+      dataSources: result.records[0]?.get('dataSource'),
+      headers: result.records[0]?.get('headers'),
     };
   } catch (error) {
     console.log(error);
@@ -68,7 +68,7 @@ const dbSaveDataSources = async (
   headers,
   importFileDir
 ) => {
-  console.log(">>>>>> Start dbSaveDataSources");
+  console.log('>>>>>> Start dbSaveDataSources');
 
   // return;
   try {
@@ -127,8 +127,8 @@ const dbSaveDataSources = async (
     );
 
     return {
-      dataSources: result.records[0]?.get("dataSource"),
-      headers: result.records[0]?.get("headers"),
+      dataSources: result.records[0]?.get('dataSource'),
+      headers: result.records[0]?.get('headers'),
     };
   } catch (error) {
     console.log(error);
@@ -136,4 +136,46 @@ const dbSaveDataSources = async (
   }
 };
 
-export { readDataSourceHeaders, getDbDataSources, dbSaveDataSources };
+const updateDataSource = async (session, processedDataSource) => {
+  console.log('>>>>>> Start updateDataSource');
+
+  const { id, ...properties } = processedDataSource;
+
+  try {
+    const result = await session.run(
+      `
+      MATCH (d:DataSource {
+        id: $id
+      })
+      SET d += $properties
+      RETURN { 
+        id: d.id,
+        fileName: d.fileName,
+        filePath: d.filePath,
+        importFilePath: d.importFilePath,
+        processed: d.processed,
+        imported: d.imported,
+        cleaned: d.cleaned
+      } AS dataSource
+      `,
+      {
+        id,
+        properties,
+      }
+    );
+
+    return result.records[0]?.get('dataSource');
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+
+  return;
+};
+
+export {
+  readDataSourceHeaders,
+  getDbDataSources,
+  dbSaveDataSources,
+  updateDataSource,
+};

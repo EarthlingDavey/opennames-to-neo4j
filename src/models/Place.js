@@ -1,83 +1,89 @@
-import fs from "fs-extra";
-import path from "path";
-import proj4 from "proj4";
-import csv from "fast-csv";
-import csvWriter from "csv-write-stream";
+import fs from 'fs-extra';
+import path from 'path';
+import proj4 from 'proj4';
+import csv from 'fast-csv';
+import csvWriter from 'csv-write-stream';
+
+import {
+  allowedTYPES,
+  allowedLOCAL_TYPES,
+  OSGB36,
+  WGS84,
+  distCsvHeaders,
+} from '../utils/defaults.js';
 
 async function processPlaces(dataSource, headers, options, productId) {
-  console.log(">>>>>> in processPlaces");
-
-  // console.log({ dataSource });
+  console.log('>>>>>> Start processPlaces');
 
   const { fileName, filePath, id, version, importFilePath } = dataSource;
 
-  console.log({ fileName, filePath, id, version, importFilePath });
-
-  // return;
-
   const writer = csvWriter({
-    headers: [
-      "id",
-      "name",
-      "slug",
-      "type",
-      "county",
-      "postcodeDistrict",
-      "lat",
-      "lng",
-      "populatedPlaceId",
-    ],
+    headers: distCsvHeaders,
   });
+
+  await fs.ensureFile(importFilePath);
 
   writer.pipe(fs.createWriteStream(importFilePath));
 
-  writer.write({
-    id: "test",
-    name: "test",
-    slug: "test",
-    type: "test",
-    county: "test",
-    postcodeDistrict: "test",
-    lat: "test",
-    lng: "test",
-    populatedPlaceId: "test",
-  });
+  let csvParseResultPromise;
 
-  // TODO: remove
-  writer.end();
-
-  return;
-
-  const csvParsePromise = new Promise((resolve, reject) => {
-    fs.createReadStream(path.resolve(dirs.data, file))
-      .pipe(
-        csv
-          .parse({ headers: dataSourceHeaders })
-          .validate(
-            (data) =>
-              allowedTYPES.includes(data["TYPE"]) &&
-              allowedLOCAL_TYPES.includes(data["LOCAL_TYPE"])
-          )
-      )
-      .on("error", (error) => console.error(error))
-      .on("data", async (row) => {
-        const processedData = await processRow(row);
-        if (processedData) {
-          writer.write(processedData);
-        }
-      })
-      .on("end", async () => {
-        // console.log(`${id} in readPlaces end `);
-        dataSource.processed = version;
-        resolve(dataSource);
-        return;
-      });
-  });
-
-  const csvParseResult = await csvParsePromise;
+  try {
+    csvParseResultPromise = await new Promise((resolve, reject) => {
+      fs.createReadStream(filePath)
+        .pipe(
+          csv
+            .parse({ headers })
+            .validate(
+              (data) =>
+                allowedTYPES.includes(data['TYPE']) &&
+                allowedLOCAL_TYPES.includes(data['LOCAL_TYPE'])
+            )
+        )
+        .on('error', (error) => {
+          console.error(error);
+          reject(error);
+        })
+        .on('data', async (row) => {
+          const processedData = await processRow(row);
+          if (processedData) {
+            writer.write(processedData);
+          }
+        })
+        .on('end', async () => {
+          dataSource.processed = true;
+          resolve(dataSource);
+          return;
+        });
+    });
+  } catch (error) {
+    // Handle rejection here
+    console.log(error);
+  }
 
   writer.end();
+
+  const csvParseResult = await csvParseResultPromise;
+
+  console.log('<<<<<< End processPlaces');
 
   return csvParseResult;
 }
+
+async function processRow(row) {
+  const coordinates = proj4(OSGB36, WGS84, {
+    x: parseFloat(row.GEOMETRY_X),
+    y: parseFloat(row.GEOMETRY_Y),
+  });
+
+  const newPlace = {
+    id: row.ID,
+    name: row.NAME1,
+    type: row.LOCAL_TYPE,
+    lat: coordinates.y,
+    lng: coordinates.x,
+  };
+
+  return newPlace;
+}
+
 export { processPlaces };
