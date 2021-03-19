@@ -11,7 +11,7 @@ import {
   updateDataSource,
 } from './models/DataSource.js';
 
-import { processPlaces } from './models/Place.js';
+import { processPlaces, importPlaces } from './models/Place.js';
 
 import { extractZip, getFilesArray } from './disk.js';
 
@@ -51,14 +51,16 @@ const main = async (productId, options) => {
 
   // console.log(dataSources);
 
-  const toProcess = dataSources.filter((x) => !x.processed);
+  /**
+   * Process
+   */
 
-  // console.log(toProcess);
+  const toProcess = dataSources.filter((x) => !x.processed);
 
   if (toProcess.length) {
     for (const dataSource of toProcess) {
       const processedDataSource = await processPlaces(
-        dataSources[0],
+        dataSource,
         headers,
         options,
         productId
@@ -88,14 +90,33 @@ const main = async (productId, options) => {
     }
   }
 
+  /**
+   * Import
+   */
+
   const toImport = dataSources.filter((x) => x.processed && !x.imported);
 
   if (toImport.length) {
     for (const dataSource of toImport) {
-      console.log('do import');
-      console.log({ dataSource });
+      const importedDataSource = await importPlaces(session, dataSource);
+
+      if (!importedDataSource) {
+        console.error('dataSource failed to import', { dataSource });
+        continue;
+      }
+      // Update the dataSources source of truth here.
+      const foundIndex = dataSources.findIndex(
+        (x) => x.id == importedDataSource.id
+      );
+      if (foundIndex >= 0) {
+        dataSources[foundIndex] = importedDataSource;
+      }
     }
   }
+
+  /**
+   * Clean up
+   */
 
   const toCleanUp = dataSources.filter(
     (x) => x.processed && x.imported && !x.cleaned
@@ -103,23 +124,13 @@ const main = async (productId, options) => {
 
   if (toCleanUp.length) {
     for (const dataSource of toCleanUp) {
-      console.log({ dataSource });
+      console.log('do clean up');
+      // console.log({ dataSource });
     }
   }
 
-  // console.log(toProcess);
-  // console.log(headers);
-
-  // if (extracted) {
-  //   await dbImport(session, productId, extractTarget);
-  // }
-
   console.log('closing session');
   session.close();
-
-  // console.log({ zipFilePath });
-
-  // const
 };
 
 const getDataSources = async (session, productId, options, apiVersion) => {
