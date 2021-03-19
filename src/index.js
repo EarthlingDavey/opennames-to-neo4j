@@ -92,6 +92,7 @@ const main = async (productId, options) => {
 
   if (toImport.length) {
     for (const dataSource of toImport) {
+      console.log('do import');
       console.log({ dataSource });
     }
   }
