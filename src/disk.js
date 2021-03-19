@@ -69,27 +69,22 @@ const deleteFiles = async (files) => {
   let failed = 0;
 
   for (const file of files) {
+    if (!file) continue;
     const didDelete = await deleteFile(file);
     if (!didDelete) {
       failed++;
     }
   }
 
-  return 0 === failed;
+  const deleteSuccess = 0 === failed;
 
-  // const dirs = getDirs(version);
-
-  try {
-    const allFiles = await fs.readdir(dir);
-    // console.log('success!', allFiles);
-    if (!allFiles || !allFiles.length) {
-      return false;
-    }
-    return allFiles.filter((filename) => filename.endsWith('.csv'));
-  } catch (err) {
-    console.error(err);
-    return undefined;
+  if (!deleteSuccess) {
+    console.error('clean up failed to delete files for dataSource', {
+      files,
+    });
   }
+
+  return deleteSuccess;
 };
 
 export { getZipVersion, extractZip, getFilesArray, deleteFiles };

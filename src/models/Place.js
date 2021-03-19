@@ -68,6 +68,10 @@ async function processPlaces(dataSource, headers, options, productId) {
 
   const csvParseResult = await csvParseResultPromise;
 
+  if (!csvParseResult) {
+    console.error('dataSource failed to process', { dataSource });
+  }
+
   console.log('<<<<<< End processPlaces');
 
   return csvParseResult;
@@ -141,9 +145,16 @@ async function importPlaces(session, dataSource) {
 
     const importedDataSource = result.records[0]?.get('importedDataSource');
 
+    if (!importedDataSource) {
+      console.error('dataSource failed to import', { dataSource });
+    }
+
+    console.debug('>>>>>> End importPlaces');
+
     return importedDataSource;
   } catch (error) {
     console.log(error);
+    console.debug('>>>>>> End importPlaces');
     return false;
   }
 }

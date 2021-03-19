@@ -1,9 +1,6 @@
-import path from 'path';
-import fs from 'fs-extra';
-
 import { getOsProductVersion, maybeDownloadProduct } from './os.js ';
 
-import { driver, dbImport } from './db.js';
+import { getSession } from './db.js';
 
 import {
   readDataSourceHeaders,
@@ -16,41 +13,83 @@ import { processPlaces, importPlaces } from './models/Place.js';
 
 import { extractZip, getFilesArray, deleteFiles } from './disk.js';
 
-console.log('hello world');
+import { fetchDataSources } from './controllers/fetch.js';
 
-const main = async (productId, options) => {
+import { mergeByProperty } from './utils/utils.js';
+
+/**
+ * Ensure the main function is passed a database session.
+ * Run the main function.
+ * And, the session is closed afterwards.
+ *
+ * @param {Object} connection
+ * @param {Object} connection.session neo4j session
+ * @param {Object} connection.driver neo4j driver
+ * @param {{uri: String, user: String, password: String}} connection.strings
+ *   neo4j connection strings
+ * @param {Object} options
+ * @returns
+ */
+
+const sessionWrapper = async (connection = {}, options) => {
   /**
-   * Is there a new version?
+   * Start a neo4j db session.
+   */
+
+  const { session, shouldCloseSession } = getSession(connection);
+
+  const dataSources = await main(session, options);
+
+  /**
+   * Maybe close the neo4j db session.
+   */
+  if (shouldCloseSession) {
+    console.log('closing session');
+    session.close();
+  }
+
+  return dataSources;
+};
+
+const main = async (session, options) => {
+  const productId = 'OpenNames';
+
+  /**
+   * Get product version from the API
    */
 
   const apiVersion = await getOsProductVersion(productId);
 
-  let session = driver.session();
+  /**
+   * Is there db data for this version?
+   */
 
   let dbResult = await getDbDataSources(session, productId, apiVersion);
 
+  /**
+   * If there is NOT db data for this version.
+   * Then fetch it.
+   */
   if (!dbResult?.dataSources?.length) {
-    dbResult = await getDataSources(session, productId, options, apiVersion);
+    dbResult = await fetchDataSources(session, productId, options, apiVersion);
   }
 
   if (!dbResult?.dataSources?.length || !dbResult?.headers?.length) {
-    console.error('no dataSources after running getDataSources');
+    console.error('no dataSources after running fetchDataSources');
+    return [];
   }
 
-  // console.log({ dbResult });
-
-  const { headers } = dbResult;
   let { dataSources } = dbResult;
 
-  // console.log(dataSources);
+  /**
+   * Filter the dataSources
+   */
 
   if (options.includeFiles) {
     dataSources = dataSources.filter((x) =>
       options.includeFiles.includes(x.fileName)
     );
   }
-
-  // console.log(dataSources);
 
   /**
    * Process
@@ -59,36 +98,28 @@ const main = async (productId, options) => {
   const toProcess = dataSources.filter((x) => !x.processed);
 
   if (toProcess.length) {
+    let processedDataSources = [];
+
     for (const dataSource of toProcess) {
       const processedDataSource = await processPlaces(
         dataSource,
-        headers,
+        dbResult.headers,
         options,
         productId
       );
-      if (!processedDataSource) {
-        console.error('dataSource failed to process', { dataSource });
-        continue;
-      }
+      if (!processedDataSource) continue;
 
       const updatedDataSource = await updateDataSource(
         session,
         processedDataSource
       );
-      if (!updatedDataSource) {
-        console.error('dataSource failed to update in db', {
-          processedDataSource,
-        });
-        continue;
-      }
-      // Update the dataSources source of truth here.
-      const foundIndex = dataSources.findIndex(
-        (x) => x.id == updatedDataSource.id
-      );
-      if (foundIndex >= 0) {
-        dataSources[foundIndex] = updatedDataSource;
-      }
+      if (!updatedDataSource) continue;
+
+      processedDataSources.push(updatedDataSource);
     }
+
+    processedDataSources.length &&
+      mergeByProperty(dataSources, processedDataSources, 'id');
   }
 
   /**
@@ -96,25 +127,21 @@ const main = async (productId, options) => {
    */
 
   const toImport = dataSources.filter(
-    (x) => x.processed && !x.imported && x.validRows > 0
+    (x) => x.importFilePath && !x.imported && x.validRows > 0
   );
 
   if (toImport.length) {
+    let importedDataSources = [];
     for (const dataSource of toImport) {
       const importedDataSource = await importPlaces(session, dataSource);
 
-      if (!importedDataSource) {
-        console.error('dataSource failed to import', { dataSource });
-        continue;
-      }
-      // Update the dataSources source of truth here.
-      const foundIndex = dataSources.findIndex(
-        (x) => x.id == importedDataSource.id
-      );
-      if (foundIndex >= 0) {
-        dataSources[foundIndex] = importedDataSource;
+      if (importedDataSource) {
+        importedDataSources.push(importedDataSource);
       }
     }
+
+    importedDataSources.length &&
+      mergeByProperty(dataSources, importedDataSources, 'id');
   }
 
   /**
@@ -126,7 +153,7 @@ const main = async (productId, options) => {
   );
 
   if (toCleanUp.length) {
-    // let result = objArray.map(({ foo }) => foo);
+    let cleanedDataSources = [];
 
     for (const dataSource of toCleanUp) {
       const deleteSuccess = await deleteFiles([
@@ -134,103 +161,23 @@ const main = async (productId, options) => {
         dataSource.filePath,
       ]);
 
-      if (!deleteSuccess) {
-        console.error('clean up failed to delete files for dataSource', {
-          dataSource,
-        });
-        continue;
-      }
+      if (!deleteSuccess) continue;
 
       const updatedDataSource = await updateDataSource(session, {
         id: dataSource.id,
+        importFilePath: null,
+        filePath: null,
         cleaned: true,
       });
 
-      console.log({ updatedDataSource });
+      cleanedDataSources.push(updatedDataSource);
     }
+
+    cleanedDataSources.length &&
+      mergeByProperty(dataSources, cleanedDataSources, 'id');
   }
 
-  console.log('closing session');
-  session.close();
+  return dataSources;
 };
 
-const getDataSources = async (session, productId, options, apiVersion) => {
-  console.log('>>>>>> Start getDataSources');
-
-  const dirs = options?.dirs || { neo4jImport: '/app/data' };
-
-  const zipFilePath = await maybeDownloadProduct(productId, apiVersion);
-
-  if (!zipFilePath) {
-    console.error('error downloading zip');
-    return;
-  }
-
-  const extractTarget = `/tmp/os/${productId}/${apiVersion}`;
-
-  const extracted = await extractZip(zipFilePath, extractTarget);
-
-  if (!extracted) {
-    console.error('error extracting zip');
-    return;
-  }
-
-  const dataDir = `${extractTarget}/DATA`;
-  const filesArray = await getFilesArray(dataDir);
-
-  if (!filesArray) {
-    console.error('error array of files was empty');
-    return;
-  }
-
-  const headers = await readDataSourceHeaders(extractTarget);
-
-  if (!headers) {
-    console.error('error could not read csv headers');
-    return;
-  }
-
-  // Write some data to the db to say that extraction was completed ok.
-
-  const importFileDir = path.resolve(
-    dirs.neo4jImport,
-    'os',
-    productId,
-    apiVersion
-  );
-
-  console.log({ importFileDir });
-
-  const dbDataSources = await dbSaveDataSources(
-    session,
-    productId,
-    apiVersion,
-    dataDir,
-    filesArray,
-    headers,
-    importFileDir
-  );
-
-  console.log('<<<<<< End getDataSources');
-
-  return dbDataSources;
-};
-
-// main('OpenNames', {
-//   importBatchSize: 10,
-//   includeFiles: [
-//     'NA80.csv',
-//     //  "SN84.csv"
-//   ],
-//   dirs: {
-//     neo4jImport: '/app/data',
-//   },
-// });
-
-const helloFromOpennamesToNeo4j = () => {
-  console.log('helloFromOpennamesToNeo4j');
-};
-
-export default main;
-
-export { helloFromOpennamesToNeo4j };
+export default sessionWrapper;

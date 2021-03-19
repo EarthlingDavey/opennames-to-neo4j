@@ -165,7 +165,15 @@ const updateDataSource = async (session, processedDataSource) => {
       }
     );
 
-    return result.records[0]?.get('dataSource');
+    const updatedDataSource = result.records[0]?.get('dataSource');
+
+    if (!updatedDataSource) {
+      console.error('dataSource failed to update in db', {
+        processedDataSource,
+      });
+    }
+
+    return updatedDataSource;
   } catch (error) {
     console.log(error);
     return false;
