@@ -1,20 +1,20 @@
-import path from "path";
+import path from 'path';
 
-import { getOsProductVersion, maybeDownloadProduct } from "./os.js ";
+import { getOsProductVersion, maybeDownloadProduct } from './os.js ';
 
-import { driver, dbImport } from "./db.js";
+import { driver, dbImport } from './db.js';
 
 import {
   readDataSourceHeaders,
   getDbDataSources,
   dbSaveDataSources,
-} from "./models/DataSource.js";
+} from './models/DataSource.js';
 
-import { processPlaces } from "./models/Place.js";
+import { processPlaces } from './models/Place.js';
 
-import { extractZip, getFilesArray } from "./disk.js";
+import { extractZip, getFilesArray } from './disk.js';
 
-console.log("hello world");
+console.log('hello world');
 
 const main = async (productId, options) => {
   /**
@@ -32,7 +32,7 @@ const main = async (productId, options) => {
   }
 
   if (!dbResult?.dataSources?.length || !dbResult?.headers?.length) {
-    console.error("no dataSources after running getDataSources");
+    console.error('no dataSources after running getDataSources');
   }
 
   // console.log({ dbResult });
@@ -75,14 +75,14 @@ const main = async (productId, options) => {
 };
 
 const getDataSources = async (session, productId, options, apiVersion) => {
-  console.log(">>>>>> Start getDataSources");
+  console.log('>>>>>> Start getDataSources');
 
-  const dirs = options?.dirs || { neo4jImport: "/app/data" };
+  const dirs = options?.dirs || { neo4jImport: '/app/data' };
 
   const zipFilePath = await maybeDownloadProduct(productId, apiVersion);
 
   if (!zipFilePath) {
-    console.error("error downloading zip");
+    console.error('error downloading zip');
     return;
   }
 
@@ -91,7 +91,7 @@ const getDataSources = async (session, productId, options, apiVersion) => {
   const extracted = await extractZip(zipFilePath, extractTarget);
 
   if (!extracted) {
-    console.error("error extracting zip");
+    console.error('error extracting zip');
     return;
   }
 
@@ -99,14 +99,14 @@ const getDataSources = async (session, productId, options, apiVersion) => {
   const filesArray = await getFilesArray(dataDir);
 
   if (!filesArray) {
-    console.error("error array of files was empty");
+    console.error('error array of files was empty');
     return;
   }
 
   const headers = await readDataSourceHeaders(extractTarget);
 
   if (!headers) {
-    console.error("error could not read csv headers");
+    console.error('error could not read csv headers');
     return;
   }
 
@@ -114,7 +114,7 @@ const getDataSources = async (session, productId, options, apiVersion) => {
 
   const importFileDir = path.resolve(
     dirs.neo4jImport,
-    "os",
+    'os',
     productId,
     apiVersion
   );
@@ -131,18 +131,24 @@ const getDataSources = async (session, productId, options, apiVersion) => {
     importFileDir
   );
 
-  console.log("<<<<<< End getDataSources");
+  console.log('<<<<<< End getDataSources');
 
   return dbDataSources;
 };
 
-main("OpenNames", {
-  importBatchSize: 10,
-  includeFiles: [
-    "NA80.csv",
-    //  "SN84.csv"
-  ],
-  dirs: {
-    neo4jImport: "/app/data",
-  },
-});
+// main('OpenNames', {
+//   importBatchSize: 10,
+//   includeFiles: [
+//     'NA80.csv',
+//     //  "SN84.csv"
+//   ],
+//   dirs: {
+//     neo4jImport: '/app/data',
+//   },
+// });
+
+const helloFromOpennamesToNeo4j = () => {
+  console.log('helloFromOpennamesToNeo4j');
+};
+
+export { helloFromOpennamesToNeo4j };
