@@ -4,6 +4,8 @@ services:
   app:
     hostname: opennames-app
     build: ./app
+    ports:
+      - 3003:3003/tcp
     env_file:
       - ./.env
     volumes:

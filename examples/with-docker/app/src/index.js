@@ -1,10 +1,12 @@
+import neo4j from 'neo4j-driver';
+import { initApi } from './api.js';
+
 /**
  * Why import it from the relative path like this?
- * So that any changes to these files are reflected here.
+ * Because local development changes to these files are saved here.
  * Importing without `../` will get the files from the node_modules folder.
  */
 
-// import { helloFromOpennamesToNeo4j } from 'opennames-to-neo4j/src/index.js';
 import opennamesToNeo4j from '../opennames-to-neo4j/src/index.js';
 
 /*
@@ -13,20 +15,46 @@ import opennamesToNeo4j from '../opennames-to-neo4j/src/index.js';
  * with fallback to defaults
  */
 
-const connection = {
-  strings: {
-    uri: process.env.NEO4J_URI || 'bolt+ssc://neo4j:7687',
-    user: process.env.NEO4J_USER || 'neo4j',
-    password: process.env.NEO4J_PASSWORD || 'pass',
-  },
+const connectionStrings = {
+  uri: process.env.NEO4J_URI || 'bolt+ssc://neo4j:7687',
+  user: process.env.NEO4J_USER || 'neo4j',
+  password: process.env.NEO4J_PASSWORD || 'pass',
 };
 
-const result = await opennamesToNeo4j(connection, {
-  batchSize: 1,
-  // includeFiles: ['TM46.csv'],
-  // includeFiles: ['TR04.csv'],
-  // includeFiles: ['TV68.csv', 'ST06.csv', 'NA80.csv', 'SN84.csv'],
-  neo4jImportDir: '/tmp/import',
-});
+const driver = neo4j.driver(
+  connectionStrings.uri,
+  neo4j.auth.basic(connectionStrings.user, connectionStrings.password)
+);
 
-if (result) console.log({ result });
+/**
+ * Starts a server so that the imported data can be
+ * queried via a GraphQL API.
+ * Visit http://localhost:3003/ for the playground
+ * and try the query:
+ * ```
+ * query {
+ *   Place {
+ *     id
+ *     name
+ *   }
+ * }
+ * ```
+ */
+initApi(driver);
+
+/**
+ * This function includes the steps to get
+ * data from OS OpenNames API to neo4j database.
+ */
+
+const result = await opennamesToNeo4j(
+  { driver },
+  {
+    batchSize: 1,
+    // includeFiles: ['TR04.csv'],
+    // includeFiles: ['TV68.csv', 'ST06.csv', 'NA80.csv', 'SN84.csv'],
+    neo4jImportDir: '/tmp/import',
+  }
+);
+
+if (result) console.log(result);
