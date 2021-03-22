@@ -20,9 +20,9 @@ const readDataSourceHeaders = async (dir) => {
   }
 };
 
-const getDbDataSources = async (session, productId, version, options) => {
+const getDbDataSources = async (session, version, options) => {
   console.log('>>>>>> Start getDbDataSources');
-  console.log({ productId, version, options });
+  console.log({ version, options });
   console.log(options.includeFiles);
 
   const query = `
@@ -64,7 +64,7 @@ const getDbDataSources = async (session, productId, version, options) => {
 
   try {
     const result = await session.run(query, {
-      productId,
+      productId: 'OpenNames',
       version,
       options,
     });
@@ -80,7 +80,6 @@ const getDbDataSources = async (session, productId, version, options) => {
 
 const dbSaveDataSources = async (
   session,
-  productId,
   version,
   dataDir,
   filesArray,
@@ -146,7 +145,7 @@ const dbSaveDataSources = async (
         v.headers AS headers
       `,
       {
-        productId,
+        productId: 'OpenNames',
         version,
         dataDir,
         filesArray,

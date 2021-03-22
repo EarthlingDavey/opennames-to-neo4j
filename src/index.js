@@ -61,9 +61,6 @@ const main = async (session, options) => {
 
   // TODO: return a summary
 
-  // TODO: remove need for productId
-  const productId = 'OpenNames';
-
   // console.log(options);
   // return;
 
@@ -71,13 +68,13 @@ const main = async (session, options) => {
    * Get product version from the API
    */
 
-  const apiVersion = await getOsProductVersion(productId);
+  const apiVersion = await getOsProductVersion('OpenNames');
 
   /**
    * Is there db data for this version?
    */
 
-  let dbResult = await getDbDataSources(session, productId, apiVersion, {
+  let dbResult = await getDbDataSources(session, apiVersion, {
     batchSize: options.batchSize,
     includeFiles: options.includeFiles,
   });
@@ -87,7 +84,7 @@ const main = async (session, options) => {
    * Then fetch it.
    */
   if (!dbResult?.dataSources?.length) {
-    dbResult = await fetchDataSources(session, productId, options, apiVersion);
+    dbResult = await fetchDataSources(session, options, apiVersion);
   }
 
   if (!dbResult?.dataSources?.length || !dbResult?.headers?.length) {
@@ -123,8 +120,7 @@ const main = async (session, options) => {
       const processedDataSource = await processPlaces(
         dataSource,
         dbResult.headers,
-        options,
-        productId
+        options
       );
       if (!processedDataSource) continue;
 

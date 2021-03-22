@@ -10,14 +10,14 @@ import {
   dbSaveDataSources,
 } from '../models/DataSource.js';
 
-const fetchDataSources = async (session, productId, options, apiVersion) => {
+const fetchDataSources = async (session, options, apiVersion) => {
   console.log('>>>>>> Start fetchDataSources');
 
-  const zipFilePath = await maybeDownloadProduct(productId, apiVersion);
+  const zipFilePath = await maybeDownloadProduct('OpenNames', apiVersion);
 
   if (!zipFilePath) return;
 
-  const extractTarget = `/tmp/os/${productId}/${apiVersion}`;
+  const extractTarget = `/tmp/os/OpenNames/${apiVersion}`;
 
   const extracted = await extractZip(zipFilePath, extractTarget);
 
@@ -45,13 +45,12 @@ const fetchDataSources = async (session, productId, options, apiVersion) => {
   const importFileDir = path.resolve(
     options.neo4jImportDir,
     'os',
-    productId,
+    'OpenNames',
     apiVersion
   );
 
   const dbDataSources = await dbSaveDataSources(
     session,
-    productId,
     apiVersion,
     dataDir,
     filesArray,

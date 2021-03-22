@@ -12,7 +12,7 @@ import {
   distCsvHeaders,
 } from '../utils/defaults.js';
 
-async function processPlaces(dataSource, headers, options, productId) {
+async function processPlaces(dataSource, headers, options) {
   console.log('>>>>>> Start processPlaces');
 
   const { fileName, filePath, id, version, importFilePath } = dataSource;
