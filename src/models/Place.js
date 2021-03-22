@@ -25,7 +25,8 @@ async function processPlaces(dataSource, headers, options, productId) {
 
   writer.pipe(fs.createWriteStream(importFilePath));
 
-  let csvParseResultPromise;
+  let csvParseResultPromise,
+    validRows = 0;
 
   try {
     csvParseResultPromise = await new Promise((resolve, reject) => {
@@ -44,13 +45,16 @@ async function processPlaces(dataSource, headers, options, productId) {
           reject(error);
         })
         .on('data', async (row) => {
+          validRows++;
           const processedData = await processRow(row);
           if (processedData) {
             writer.write(processedData);
           }
         })
-        .on('end', async () => {
+        .on('end', async (a, b) => {
+          console.log({ validRows });
           dataSource.processed = true;
+          dataSource.validRows = validRows;
           resolve(dataSource);
           return;
         });
@@ -63,6 +67,10 @@ async function processPlaces(dataSource, headers, options, productId) {
   writer.end();
 
   const csvParseResult = await csvParseResultPromise;
+
+  if (!csvParseResult) {
+    console.error('dataSource failed to process', { dataSource });
+  }
 
   console.log('<<<<<< End processPlaces');
 
@@ -86,4 +94,69 @@ async function processRow(row) {
   return newPlace;
 }
 
-export { processPlaces };
+async function importPlaces(session, dataSource) {
+  console.debug('>>>>>> Start importPlaces');
+
+  const { importFilePath } = dataSource;
+
+  let statement = `
+ 
+  USING PERIODIC COMMIT 500
+  
+  LOAD CSV WITH HEADERS FROM 'file://' + $importFilePath + '' AS place
+  WITH place 
+  
+  MERGE (p:Place {
+    id: place.id
+  })
+  
+  SET
+  p.name             = place.name,
+  p.type             = place.type,
+  p.location         = point({latitude: tofloat(place.lat), longitude: tofloat(place.lng), crs: 'WGS-84'}),
+  p.updatedAt        = TIMESTAMP()
+  
+  // This collect will close the UNWIND 'loop'
+  WITH count(p) as count, $dataSourceId AS dataSourceId
+
+  MATCH (d:DataSource {
+    id: dataSourceId
+  })
+  SET d.imported = true
+
+  RETURN 
+  count AS count, 
+  { id: d.id,
+    fileName: d.fileName,
+    filePath: d.filePath,
+    importFilePath: d.importFilePath,
+    processed: d.processed,
+    imported: d.imported,
+    cleaned: d.cleaned
+  } AS importedDataSource
+  `;
+
+  try {
+    const result = await session.run(statement, {
+      dataSourceId: dataSource.id,
+      importFilePath: importFilePath.replace('/tmp/import', '/shared'),
+    });
+    const count = result.records[0]?.get('count');
+
+    const importedDataSource = result.records[0]?.get('importedDataSource');
+
+    if (!importedDataSource) {
+      console.error('dataSource failed to import', { dataSource });
+    }
+
+    console.debug('>>>>>> End importPlaces');
+
+    return importedDataSource;
+  } catch (error) {
+    console.log(error);
+    console.debug('>>>>>> End importPlaces');
+    return false;
+  }
+}
+
+export { processPlaces, importPlaces };

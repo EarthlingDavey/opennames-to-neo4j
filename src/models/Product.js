@@ -50,9 +50,9 @@ const maybeDownloadProduct = async (productId, version) => {
   console.log(downloadInfo);
 
   if (!downloadInfo.url || !downloadInfo.fileName) {
+    console.error('error downloading zip, no url or filename');
     return;
   }
-  console.log('hi');
 
   const dir = `/tmp/os/${productId}/${version}`;
   const filePath = `${dir}/${downloadInfo.fileName}`;

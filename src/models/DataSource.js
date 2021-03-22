@@ -15,7 +15,7 @@ const readDataSourceHeaders = async (dir) => {
     });
     return headers;
   } catch (error) {
-    console.log(error);
+    console.error('error could not read csv headers', error);
     return false;
   }
 };
@@ -155,7 +155,8 @@ const updateDataSource = async (session, processedDataSource) => {
         importFilePath: d.importFilePath,
         processed: d.processed,
         imported: d.imported,
-        cleaned: d.cleaned
+        cleaned: d.cleaned,
+        validRows: d.validRows
       } AS dataSource
       `,
       {
@@ -164,7 +165,15 @@ const updateDataSource = async (session, processedDataSource) => {
       }
     );
 
-    return result.records[0]?.get('dataSource');
+    const updatedDataSource = result.records[0]?.get('dataSource');
+
+    if (!updatedDataSource) {
+      console.error('dataSource failed to update in db', {
+        processedDataSource,
+      });
+    }
+
+    return updatedDataSource;
   } catch (error) {
     console.log(error);
     return false;
