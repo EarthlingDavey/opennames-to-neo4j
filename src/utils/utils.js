@@ -33,4 +33,37 @@ const mergeByProperty = (target, source, prop) => {
       : target.push(sourceElement);
   });
 };
-export { getNeo4jSession, mergeByProperty };
+
+/**
+ * Performs a deep merge of objects and returns new object. Does not modify
+ * objects (immutable) and merges arrays via concatenation.
+ *
+ * @param {...object} objects - Objects to merge
+ * @returns {object} New object with merged key/values
+ */
+function mergeDeep(...objects) {
+  const isObject = (obj) => obj && typeof obj === 'object';
+
+  return objects.reduce((prev, obj) => {
+    Object.keys(obj).forEach((key) => {
+      const pVal = prev[key];
+      const oVal = obj[key];
+
+      if (Array.isArray(pVal) && Array.isArray(oVal)) {
+        prev[key] = pVal.concat(...oVal);
+      } else if (isObject(pVal) && isObject(oVal)) {
+        prev[key] = mergeDeep(pVal, oVal);
+      } else {
+        prev[key] = oVal;
+      }
+    });
+
+    return prev;
+  }, {});
+}
+
+// Credit boss man https://github.com/wesbos/waait
+const waitSeconds = (amount = 0) =>
+  new Promise((resolve) => setTimeout(resolve, amount * 1000));
+
+export { getNeo4jSession, mergeByProperty, mergeDeep, waitSeconds };

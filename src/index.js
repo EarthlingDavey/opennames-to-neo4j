@@ -1,5 +1,7 @@
 import fs from 'fs-extra';
-
+/**
+ * Defaults and constants.
+ */
 import { defaultOptions } from './utils/defaults.js';
 /**
  * Models.
@@ -11,7 +13,12 @@ import { getOsProductVersion } from './models/Product.js';
 /**
  * Helpers.
  */
-import { getNeo4jSession, mergeByProperty } from './utils/utils.js';
+import {
+  getNeo4jSession,
+  mergeByProperty,
+  mergeDeep,
+  waitSeconds,
+} from './utils/utils.js';
 /**
  * Fetch.
  */
@@ -35,8 +42,7 @@ const sessionWrapper = async (connection = {}, options) => {
   /**
    * Apply default function options.
    */
-  options = { ...defaultOptions, ...options };
-  console.log(options);
+  options = mergeDeep(defaultOptions, options);
 
   /**
    * Start a neo4j db session.
@@ -136,17 +142,30 @@ const main = async (session, options) => {
         }
       }
 
-      const processedDataSource = await processPlaces(
-        dataSource,
-        dbResult.headers,
-        options
-      );
+      let processedDataSource;
+
+      try {
+        processedDataSource = await processPlaces(
+          dataSource,
+          dbResult.headers,
+          options
+        );
+      } catch (error) {
+        console.error(error, { dataSource });
+        continue;
+      }
+
       if (!processedDataSource) continue;
 
       const updatedDataSource = await updateDataSource(
         session,
         processedDataSource
       );
+
+      console.log(`process loop, waiting for ${options.waits.process} seconds`);
+      await waitSeconds(options.waits.process);
+      console.log('finished waiting');
+
       if (!updatedDataSource) continue;
 
       processedDataSources.push(updatedDataSource);
@@ -178,6 +197,10 @@ const main = async (session, options) => {
       if (importedDataSource) {
         importedDataSources.push(importedDataSource);
       }
+
+      console.log(`import loop, waiting for ${options.waits.import} seconds`);
+      await waitSeconds(options.waits.import);
+      console.log('finished waiting');
     }
 
     if (importedDataSources.length) {
@@ -213,6 +236,10 @@ const main = async (session, options) => {
       });
 
       cleanedDataSources.push(updatedDataSource);
+
+      console.log(`clean up loop, waiting for ${options.waits.clean} seconds`);
+      await waitSeconds(options.waits.clean);
+      console.log('finished waiting');
     }
 
     if (cleanedDataSources.length) {

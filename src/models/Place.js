@@ -17,15 +17,13 @@ import {
 async function processPlaces(dataSource, headers, options) {
   console.log('>>>>>> Start processPlaces');
 
-  const { fileName, filePath, id, version, importFilePath } = dataSource;
+  const { filePath, importFilePath } = dataSource;
 
   const writerHeaders = await filters(
-    { distCsvHeaders },
+    { distCsvHeaders: [...distCsvHeaders] },
     'distCsvHeaders',
     options
   );
-
-  console.log({ writerHeaders });
 
   const writer = csvWriter({
     headers: writerHeaders,
@@ -114,6 +112,9 @@ async function processRow(row) {
 
 async function importPlaces(session, dataSource, options) {
   console.debug('>>>>>> Start importPlaces');
+  console.debug({
+    validRows: dataSource.validRows,
+  });
 
   const { importFilePath } = dataSource;
 

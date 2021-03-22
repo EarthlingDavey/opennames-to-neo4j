@@ -1,6 +1,11 @@
 const defaultOptions = {
   batchSize: 10,
   neo4jImportDir: '/tmp/import',
+  waits: {
+    process: 1,
+    import: 1,
+    clean: 1,
+  },
 };
 
 const allowedTYPES = ['populatedPlace', 'other'];
