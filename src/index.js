@@ -1,3 +1,4 @@
+import { defaultOptions } from './utils/defaults.js';
 /**
  * Models.
  */
@@ -30,6 +31,12 @@ import { fetchDataSources } from './controllers/fetch.js';
 
 const sessionWrapper = async (connection = {}, options) => {
   /**
+   * Apply default function options.
+   */
+  options = { ...defaultOptions, ...options };
+  console.log(options);
+
+  /**
    * Start a neo4j db session.
    */
 
@@ -53,10 +60,12 @@ const main = async (session, options) => {
   // in-case db is not sharing a volume with the app.
 
   // TODO: return a summary
-  // TODO: only do x first DataSources
 
   // TODO: remove need for productId
   const productId = 'OpenNames';
+
+  // console.log(options);
+  // return;
 
   /**
    * Get product version from the API
@@ -68,7 +77,10 @@ const main = async (session, options) => {
    * Is there db data for this version?
    */
 
-  let dbResult = await getDbDataSources(session, productId, apiVersion);
+  let dbResult = await getDbDataSources(session, productId, apiVersion, {
+    batchSize: options.batchSize,
+    includeFiles: options.includeFiles,
+  });
 
   /**
    * If there is NOT db data for this version.
@@ -85,15 +97,18 @@ const main = async (session, options) => {
 
   let { dataSources } = dbResult;
 
+  const allCleaned = dataSources.find((x) => !x.cleaned) === undefined;
+
+  if (allCleaned) {
+    console.debug(
+      'nothing to do, everything has been processed, imported and cleaned'
+    );
+    return;
+  }
+
   /**
    * Filter the dataSources
    */
-
-  if (options.includeFiles) {
-    dataSources = dataSources.filter((x) =>
-      options.includeFiles.includes(x.fileName)
-    );
-  }
 
   /**
    * Process
@@ -113,6 +128,8 @@ const main = async (session, options) => {
       );
       if (!processedDataSource) continue;
 
+      // console.log({ processedDataSource });
+
       const updatedDataSource = await updateDataSource(
         session,
         processedDataSource
@@ -126,6 +143,9 @@ const main = async (session, options) => {
       mergeByProperty(dataSources, processedDataSources, 'id');
   }
 
+  // console.log(dataSources);
+  // return;
+
   /**
    * Import
    */
@@ -133,6 +153,8 @@ const main = async (session, options) => {
   const toImport = dataSources.filter(
     (x) => x.importFilePath && !x.imported && x.validRows > 0
   );
+
+  console.log({ toImport });
 
   if (toImport.length) {
     let importedDataSources = [];
@@ -180,6 +202,9 @@ const main = async (session, options) => {
     cleanedDataSources.length &&
       mergeByProperty(dataSources, cleanedDataSources, 'id');
   }
+
+  // console.log(dataSources);
+  // return;
 
   return dataSources;
 };

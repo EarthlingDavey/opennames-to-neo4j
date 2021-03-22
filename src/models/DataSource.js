@@ -20,35 +20,54 @@ const readDataSourceHeaders = async (dir) => {
   }
 };
 
-const getDbDataSources = async (session, productId, version) => {
+const getDbDataSources = async (session, productId, version, options) => {
   console.log('>>>>>> Start getDbDataSources');
-  console.log({ productId, version });
+  console.log({ productId, version, options });
+  console.log(options.includeFiles);
 
-  try {
-    const result = await session.run(
-      `
+  const query = `
       MATCH (product:OsProduct {
         id: $productId
       })-[:HAS_VERSION]->(v:OsVersion {
         id: $version
       })-[:HAS_FILE]->(d:DataSource)
 
-      RETURN COLLECT({ 
-        id: d.id,
-        fileName: d.fileName,
-        filePath: d.filePath,
-        importFilePath: d.importFilePath,
-        processed: d.processed,
-        imported: d.imported,
-        cleaned: d.cleaned,
-        version: v.id
-      }) AS dataSource, v.headers AS headers
-      `,
-      {
-        productId,
-        version,
+      ${
+        options.includeFiles && options.includeFiles.length
+          ? `WHERE d.fileName IN $options.includeFiles`
+          : ``
       }
-    );
+
+      WITH d, v
+
+      ORDER BY d.processed DESC, d.imported DESC, d.id
+
+      RETURN 
+        COLLECT({ 
+          id: d.id,
+          fileName: d.fileName,
+          filePath: d.filePath,
+          importFilePath: d.importFilePath,
+          processed: d.processed,
+          imported: d.imported,
+          cleaned: d.cleaned,
+          validRows: d.validRows,
+          version: v.id
+        })
+          ${options.batchSize ? `[0..$options.batchSize]` : ``}
+        AS 
+          dataSource,
+        v.headers AS headers 
+      `;
+
+  console.log(query);
+
+  try {
+    const result = await session.run(query, {
+      productId,
+      version,
+      options,
+    });
     return {
       dataSources: result.records[0]?.get('dataSource'),
       headers: result.records[0]?.get('headers'),
@@ -66,9 +85,12 @@ const dbSaveDataSources = async (
   dataDir,
   filesArray,
   headers,
-  importFileDir
+  importFileDir,
+  options
 ) => {
   console.log('>>>>>> Start dbSaveDataSources');
+
+  console.log(options);
 
   // return;
   try {
@@ -105,16 +127,23 @@ const dbSaveDataSources = async (
 
       MERGE (v)-[:HAS_FILE]->(d)
 
-      RETURN COLLECT({ 
-        id: d.id,
-        fileName: d.fileName,
-        filePath: d.filePath,
-        importFilePath: d.importFilePath,
-        processed: d.processed,
-        imported: d.imported,
-        cleaned: d.cleaned,
-        version: v.id
-      }) AS dataSource, product AS product, v.headers AS headers
+      RETURN 
+        COLLECT({ 
+          id: d.id,
+          fileName: d.fileName,
+          filePath: d.filePath,
+          importFilePath: d.importFilePath,
+          processed: d.processed,
+          imported: d.imported,
+          cleaned: d.cleaned,
+          validRows: d.validRows,
+          version: v.id
+        })
+          ${options.batchSize ? `[0..$options.batchSize]` : ``}
+        AS 
+          dataSource,
+        product AS product, 
+        v.headers AS headers
       `,
       {
         productId,
@@ -123,6 +152,7 @@ const dbSaveDataSources = async (
         filesArray,
         headers,
         importFileDir,
+        options,
       }
     );
 

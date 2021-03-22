@@ -13,8 +13,6 @@ import {
 const fetchDataSources = async (session, productId, options, apiVersion) => {
   console.log('>>>>>> Start fetchDataSources');
 
-  const dirs = options?.dirs || { neo4jImport: '/app/data' };
-
   const zipFilePath = await maybeDownloadProduct(productId, apiVersion);
 
   if (!zipFilePath) return;
@@ -26,9 +24,15 @@ const fetchDataSources = async (session, productId, options, apiVersion) => {
   if (!extracted) return;
 
   const dataDir = `${extractTarget}/DATA`;
-  const filesArray = await getFilesArray(dataDir);
+  let filesArray = await getFilesArray(dataDir);
 
   if (!filesArray) return;
+
+  if (options.includeFiles?.length) {
+    filesArray = filesArray.filter((fileName) =>
+      options.includeFiles.includes(fileName)
+    );
+  }
 
   const headers = await readDataSourceHeaders(extractTarget);
 
@@ -39,7 +43,7 @@ const fetchDataSources = async (session, productId, options, apiVersion) => {
   // TODO: helper function for paths
 
   const importFileDir = path.resolve(
-    dirs.neo4jImport,
+    options.neo4jImportDir,
     'os',
     productId,
     apiVersion
@@ -52,7 +56,8 @@ const fetchDataSources = async (session, productId, options, apiVersion) => {
     dataDir,
     filesArray,
     headers,
-    importFileDir
+    importFileDir,
+    options
   );
 
   console.log('<<<<<< End fetchDataSources');
