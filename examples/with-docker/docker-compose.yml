@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  app:
+    hostname: opennames-app
+    build: ./app
+    env_file:
+      - ./.env
+    volumes:
+      - ./app:/app
+      - ../..:/app/opennames-to-neo4j
+      - opennames_node_modules:/app/node_modules
+      - opennames_yarn_cache:/app/.yarn/cache
+      - neo4j_import:/tmp/import
+
+  neo4j:
+    image: neo4j:4.2.3
+    hostname: opennames-neo4j
+    ports:
+      - 7687:7687/tcp
+    environment:
+      - NEO4J_AUTH=neo4j/pass
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4JLABS_PLUGINS=["apoc"]
+      # Raise memory limits
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms.memory.heap.initial_size=1G
+      - NEO4J_dbms_memory_heap_max__size=1G
+      - NEO4J_dbms_directories_logs=/var/lib/neo4j/logs
+    volumes:
+      - ./neo4j/logs:/var/lib/neo4j/logs
+      - neo4j_import:/var/lib/neo4j/import/shared
+      - neo4j_plugins:/var/lib/neo4j/plugins
+      - neo4j_data:/var/lib/neo4j/data
+    tty: true
+    stdin_open: true
+
+volumes:
+  neo4j_import:
+  neo4j_data:
+  neo4j_plugins:
+  opennames_node_modules:
+  opennames_yarn_cache:
