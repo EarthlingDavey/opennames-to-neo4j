@@ -7,8 +7,6 @@
 // import { helloFromOpennamesToNeo4j } from 'opennames-to-neo4j/src/index.js';
 import opennamesToNeo4j from '../opennames-to-neo4j/src/index.js';
 
-console.log('hello world');
-
 /*
  * Create a Neo4j driver instance to connect to the database
  * using credentials specified as environment variables
@@ -23,13 +21,12 @@ const connection = {
   },
 };
 
-const dataSources = await opennamesToNeo4j(connection, {
-  importBatchSize: 10,
-  includeFiles: ['TR04.csv'],
+const result = await opennamesToNeo4j(connection, {
+  batchSize: 1,
+  // includeFiles: ['TM46.csv'],
+  // includeFiles: ['TR04.csv'],
   // includeFiles: ['TV68.csv', 'ST06.csv', 'NA80.csv', 'SN84.csv'],
-  dirs: {
-    neo4jImport: '/tmp/import',
-  },
+  neo4jImportDir: '/tmp/import',
 });
 
-console.log({ dataSources });
+if (result) console.log({ result });
