@@ -60,8 +60,6 @@ const getDbDataSources = async (session, version, options) => {
         v.headers AS headers 
       `;
 
-  console.log(query);
-
   try {
     const result = await session.run(query, {
       productId: 'OpenNames',

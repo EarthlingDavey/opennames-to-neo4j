@@ -17,7 +17,7 @@ const fetchDataSources = async (session, options, apiVersion) => {
 
   if (!zipFilePath) return;
 
-  const extractTarget = `/tmp/os/OpenNames/${apiVersion}`;
+  const extractTarget = path.resolve('/tmp', 'os', 'OpenNames', apiVersion);
 
   const extracted = await extractZip(zipFilePath, extractTarget);
 
@@ -37,10 +37,6 @@ const fetchDataSources = async (session, options, apiVersion) => {
   const headers = await readDataSourceHeaders(extractTarget);
 
   if (!headers) return;
-
-  // Write some data to the db to say that extraction was completed ok.
-
-  // TODO: helper function for paths
 
   const importFileDir = path.resolve(
     options.neo4jImportDir,

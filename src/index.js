@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+
 import { defaultOptions } from './utils/defaults.js';
 /**
  * Models.
@@ -42,7 +44,7 @@ const sessionWrapper = async (connection = {}, options) => {
 
   const { session, shouldCloseSession } = getNeo4jSession(connection);
 
-  const dataSources = await main(session, options);
+  const result = await main(session, options);
 
   /**
    * Maybe close the neo4j db session.
@@ -52,14 +54,15 @@ const sessionWrapper = async (connection = {}, options) => {
     session.close();
   }
 
-  return dataSources;
+  return result;
 };
 
 const main = async (session, options) => {
   // TODO: Allow for serving of processed csv files.
   // in-case db is not sharing a volume with the app.
 
-  // TODO: return a summary
+  let summary = {};
+  let errors = [];
 
   // console.log(options);
   // return;
@@ -85,22 +88,25 @@ const main = async (session, options) => {
    */
   if (!dbResult?.dataSources?.length) {
     dbResult = await fetchDataSources(session, options, apiVersion);
+    summary.fetched = true;
+  } else {
+    summary.cached = true;
   }
 
   if (!dbResult?.dataSources?.length || !dbResult?.headers?.length) {
-    console.error('no dataSources after running fetchDataSources');
-    return [];
+    // console.error('no dataSources after running fetchDataSources');
+    errors.push('no dataSources after running fetchDataSources');
+    return { summary, errors, dataSources: [] };
   }
 
   let { dataSources } = dbResult;
 
-  const allCleaned = dataSources.find((x) => !x.cleaned) === undefined;
-
-  if (allCleaned) {
+  if (dataSources.find((x) => !x.cleaned) === undefined) {
     console.debug(
       'nothing to do, everything has been processed, imported and cleaned'
     );
-    return;
+    summary.complete = true;
+    return { summary, errors, dataSources: [] };
   }
 
   /**
@@ -117,14 +123,25 @@ const main = async (session, options) => {
     let processedDataSources = [];
 
     for (const dataSource of toProcess) {
+      /**
+       * Does the source csv file is exist?
+       * They are stored in /tmp so there is potential for deletion
+       */
+      if (!(await fs.existsSync(dataSource.filePath))) {
+        await fetchDataSources(session, options, apiVersion);
+
+        if (!(await fs.existsSync(dataSource.filePath))) {
+          errors.push('no dataSources after running fetchDataSources');
+          return { summary, errors, dataSources: [] };
+        }
+      }
+
       const processedDataSource = await processPlaces(
         dataSource,
         dbResult.headers,
         options
       );
       if (!processedDataSource) continue;
-
-      // console.log({ processedDataSource });
 
       const updatedDataSource = await updateDataSource(
         session,
@@ -135,12 +152,11 @@ const main = async (session, options) => {
       processedDataSources.push(updatedDataSource);
     }
 
-    processedDataSources.length &&
+    if (processedDataSources.length) {
+      summary.processed = processedDataSources.length;
       mergeByProperty(dataSources, processedDataSources, 'id');
+    }
   }
-
-  // console.log(dataSources);
-  // return;
 
   /**
    * Import
@@ -149,8 +165,6 @@ const main = async (session, options) => {
   const toImport = dataSources.filter(
     (x) => x.importFilePath && !x.imported && x.validRows > 0
   );
-
-  console.log({ toImport });
 
   if (toImport.length) {
     let importedDataSources = [];
@@ -162,8 +176,10 @@ const main = async (session, options) => {
       }
     }
 
-    importedDataSources.length &&
+    if (importedDataSources.length) {
+      summary.imported = importedDataSources.length;
       mergeByProperty(dataSources, importedDataSources, 'id');
+    }
   }
 
   /**
@@ -195,14 +211,13 @@ const main = async (session, options) => {
       cleanedDataSources.push(updatedDataSource);
     }
 
-    cleanedDataSources.length &&
+    if (cleanedDataSources.length) {
+      summary.cleaned = cleanedDataSources.length;
       mergeByProperty(dataSources, cleanedDataSources, 'id');
+    }
   }
 
-  // console.log(dataSources);
-  // return;
-
-  return dataSources;
+  return { summary, errors, dataSources };
 };
 
 export default sessionWrapper;
