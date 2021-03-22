@@ -169,7 +169,11 @@ const main = async (session, options) => {
   if (toImport.length) {
     let importedDataSources = [];
     for (const dataSource of toImport) {
-      const importedDataSource = await importPlaces(session, dataSource);
+      const importedDataSource = await importPlaces(
+        session,
+        dataSource,
+        options
+      );
 
       if (importedDataSource) {
         importedDataSources.push(importedDataSource);

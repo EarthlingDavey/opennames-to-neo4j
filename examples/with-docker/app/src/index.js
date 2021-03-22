@@ -43,10 +43,45 @@ const driver = neo4j.driver(
 initApi(driver);
 
 /**
+ * Example of how to import data,
+ * in addition to the packages defaults.
+ */
+const customFunctions = {
+  /**
+   * Add to the dist (processed) csv file header
+   */
+  distCsvHeadersFilter: async ({ distCsvHeaders }) => {
+    distCsvHeaders.push('county');
+    return { distCsvHeaders };
+  },
+  /**
+   * If county is on the row, then set it to the
+   * processedRow object
+   */
+  processedRowFilter: async ({ processedRow, row }) => {
+    processedRow.county = row.COUNTY_UNITARY !== '' ? row.COUNTY_UNITARY : null;
+
+    return { processedRow };
+  },
+  /**
+   * Add the the cypher import statement
+   */
+  placeImportStatementFilter: async ({ placeImportStatement }) => {
+    const find = `// PLACE PROPERTIES`;
+    const replace = `
+    ${find} 
+    p.county  = place.county,
+    `;
+    return {
+      placeImportStatement: placeImportStatement.replace(find, replace),
+    };
+  },
+};
+
+/**
  * This function includes the steps to get
  * data from OS OpenNames API to neo4j database.
  */
-
 const result = await opennamesToNeo4j(
   { driver },
   {
@@ -54,6 +89,7 @@ const result = await opennamesToNeo4j(
     // includeFiles: ['TR04.csv'],
     // includeFiles: ['TV68.csv', 'ST06.csv', 'NA80.csv', 'SN84.csv'],
     neo4jImportDir: '/tmp/import',
+    functions: customFunctions,
   }
 );
 

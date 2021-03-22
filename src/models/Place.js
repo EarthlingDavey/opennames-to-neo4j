@@ -4,6 +4,8 @@ import proj4 from 'proj4';
 import csv from 'fast-csv';
 import csvWriter from 'csv-write-stream';
 
+import { filters } from '../utils/filters.js';
+
 import {
   allowedTYPES,
   allowedLOCAL_TYPES,
@@ -17,8 +19,16 @@ async function processPlaces(dataSource, headers, options) {
 
   const { fileName, filePath, id, version, importFilePath } = dataSource;
 
+  const writerHeaders = await filters(
+    { distCsvHeaders },
+    'distCsvHeaders',
+    options
+  );
+
+  console.log({ writerHeaders });
+
   const writer = csvWriter({
-    headers: distCsvHeaders,
+    headers: writerHeaders,
   });
 
   await fs.ensureFile(importFilePath);
@@ -26,7 +36,8 @@ async function processPlaces(dataSource, headers, options) {
   writer.pipe(fs.createWriteStream(importFilePath));
 
   let csvParseResultPromise,
-    validRows = 0;
+    validRows = 0,
+    writePromises = [];
 
   try {
     csvParseResultPromise = await new Promise((resolve, reject) => {
@@ -46,15 +57,22 @@ async function processPlaces(dataSource, headers, options) {
         })
         .on('data', async (row) => {
           validRows++;
-          const processedData = await processRow(row);
-          if (processedData) {
-            writer.write(processedData);
+          let processedRow = await processRow(row);
+
+          processedRow = await filters(
+            { processedRow, row },
+            'processedRow',
+            options
+          );
+
+          if (processedRow) {
+            writePromises.push(await writer.write(processedRow));
           }
         })
-        .on('end', async (a, b) => {
-          console.log({ validRows });
+        .on('end', async () => {
           dataSource.processed = true;
           dataSource.validRows = validRows;
+          await Promise.all(writePromises);
           resolve(dataSource);
           return;
         });
@@ -64,9 +82,9 @@ async function processPlaces(dataSource, headers, options) {
     console.log(error);
   }
 
-  writer.end();
-
   const csvParseResult = await csvParseResultPromise;
+
+  writer.end();
 
   if (!csvParseResult) {
     console.error('dataSource failed to process', { dataSource });
@@ -94,7 +112,7 @@ async function processRow(row) {
   return newPlace;
 }
 
-async function importPlaces(session, dataSource) {
+async function importPlaces(session, dataSource, options) {
   console.debug('>>>>>> Start importPlaces');
 
   const { importFilePath } = dataSource;
@@ -110,14 +128,15 @@ async function importPlaces(session, dataSource) {
     id: place.id
   })
   
-  SET
+  SET 
+  // PLACE PROPERTIES
   p.name             = place.name,
   p.type             = place.type,
   p.location         = point({latitude: tofloat(place.lat), longitude: tofloat(place.lng), crs: 'WGS-84'}),
   p.updatedAt        = TIMESTAMP()
   
   // This collect will close the UNWIND 'loop'
-  WITH count(p) as count, $dataSourceId AS dataSourceId
+  WITH count(p) as count, $dataSourceId AS dataSourceId 
 
   MATCH (d:DataSource {
     id: dataSourceId
@@ -135,6 +154,19 @@ async function importPlaces(session, dataSource) {
     cleaned: d.cleaned
   } AS importedDataSource
   `;
+
+  if (options?.functions?.place?.filterImportStatement) {
+    statement = await options?.functions?.place?.filterImportStatement(
+      statement,
+      dataSource
+    );
+  }
+
+  statement = await filters(
+    { placeImportStatement: statement },
+    'placeImportStatement',
+    options
+  );
 
   try {
     const result = await session.run(statement, {
