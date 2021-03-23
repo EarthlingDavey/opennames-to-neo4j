@@ -1,6 +1,6 @@
 {
   "name": "opennames-to-neo4j",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "scripts": {
     "start:dev": "nodemon --watch src --ext js --exec babel-node  src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
