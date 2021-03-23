@@ -1,3 +1,4 @@
 .env
 docker/neo4j/logs
 node_modules
+dist
