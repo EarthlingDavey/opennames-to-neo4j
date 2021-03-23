@@ -1,10 +1,4 @@
-## What does the package do?
-
-The package is to automate the download and import of OpenNames data to a neo4j database.
-
-## Use
-
-1. Sign up for API access at https://osdatahub.os.uk/
+## What does this example do?
 
 ## Local development
 

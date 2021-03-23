@@ -6,6 +6,7 @@ const defaultOptions = {
     import: 1,
     clean: 1,
   },
+  functions: {},
 };
 
 const allowedTYPES = ['populatedPlace', 'other'];

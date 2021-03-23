@@ -123,7 +123,9 @@ const main = async (session, options) => {
    * Process
    */
 
-  const toProcess = dataSources.filter((x) => !x.processed);
+  const toProcess = dataSources.filter(
+    (x) => !x.processed || !x.importFilePath
+  );
 
   if (toProcess.length) {
     let processedDataSources = [];
@@ -188,6 +190,19 @@ const main = async (session, options) => {
   if (toImport.length) {
     let importedDataSources = [];
     for (const dataSource of toImport) {
+      /**
+       * Does the processed csv file is exist?
+       * They are stored in /tmp so there is potential for deletion
+       */
+      if (!(await fs.existsSync(dataSource.importFilePath))) {
+        await updateDataSource(session, {
+          ...dataSource,
+          processed: null,
+          importFilePath: null,
+        });
+        continue;
+      }
+
       const importedDataSource = await importPlaces(
         session,
         dataSource,
@@ -251,4 +266,6 @@ const main = async (session, options) => {
   return { summary, errors, dataSources };
 };
 
-export default sessionWrapper;
+const on2n4j = sessionWrapper;
+
+export { on2n4j };

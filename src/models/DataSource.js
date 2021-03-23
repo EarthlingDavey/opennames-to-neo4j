@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import csv from 'fast-csv';
+const csv = require('@fast-csv/parse');
 
 const readDataSourceHeaders = async (dir) => {
   console.log('>>>>>> Start readDataSourceHeaders');
@@ -40,7 +40,7 @@ const getDbDataSources = async (session, version, options) => {
 
       WITH d, v
 
-      ORDER BY d.processed DESC, d.imported DESC, d.id
+      ORDER BY d.processed DESC, d.imported DESC, d.cleaned DESC, d.id
 
       RETURN 
         COLLECT({ 
@@ -106,8 +106,7 @@ const dbSaveDataSources = async (
       v, 
       $dataDir AS dataDir,
       $filesArray AS filesArray,
-      $version AS version,
-      $importFileDir AS importFileDir
+      $version AS version
 
       UNWIND filesArray as fileName
 

@@ -9,7 +9,8 @@ import { customFunctions } from './customFunctions.js';
  * Importing without `../` will get the files from the node_modules folder.
  */
 
-import opennamesToNeo4j from '../opennames-to-neo4j/src/index.js';
+// import on2n4j from '../opennames-to-neo4j/src/index.js';
+import { on2n4j } from '../opennames-to-neo4j/dist/index.js';
 
 /*
  * Create a Neo4j driver instance to connect to the database
@@ -42,14 +43,14 @@ const driver = neo4j.driver(
  * }
  * ```
  */
-initApi(driver);
+// initApi(driver);
 
 const options = {
   /**
    * How many of the OpenName files do you want to process & import?
    * Optional. Leave empty for all files.
    */
-  batchSize: 2,
+  batchSize: 1,
   /**
    * Array of OpenName file names you want to process & import.
    * Optional. Leave empty for all files.
@@ -72,6 +73,15 @@ const options = {
    */
   // neo4jImportDir: '/app/public',
   // neo4jImportUrl: 'http://app:3000/public',
+  /**
+   * A pause in seconds between each loop.
+   * Useful to prevent from relentlessly hogging resources.
+   */
+  waits: {
+    process: 1,
+    import: 10,
+    clean: 1,
+  },
 };
 
 /**
@@ -85,6 +95,6 @@ if (options.neo4jImportUrl) {
  * This function includes the steps to get
  * data from OS OpenNames API to neo4j database.
  */
-const result = await opennamesToNeo4j({ driver }, options);
+const result = await on2n4j({ driver }, options);
 
 if (result) console.log(result);

@@ -1,7 +1,7 @@
 const filters = async (object, returnProperty, options) => {
   const functionName = `${returnProperty}Filter`;
 
-  if (options?.functions[functionName]) {
+  if (options?.functions && options.functions[functionName]) {
     object = await options?.functions[functionName](object, returnProperty);
   }
 
