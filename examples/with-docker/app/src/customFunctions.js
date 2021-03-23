@@ -8,7 +8,7 @@ const customFunctions = {
    * Add to the dist (processed) csv file header
    */
   distCsvHeadersFilter: async ({ distCsvHeaders }) => {
-    distCsvHeaders.push('county');
+    await distCsvHeaders.push('county');
     return { distCsvHeaders };
   },
   /**

@@ -1,3 +1,2 @@
 .env
 docker/neo4j/logs
-examples/with-docker/neo4j/logs

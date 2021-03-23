@@ -1,5 +1,6 @@
 import neo4j from 'neo4j-driver';
 import { initApi } from './api.js';
+import { initFileServer } from './fileServer.js';
 import { customFunctions } from './customFunctions.js';
 
 /**
@@ -43,19 +44,47 @@ const driver = neo4j.driver(
  */
 initApi(driver);
 
+const options = {
+  /**
+   * How many of the OpenName files do you want to process & import?
+   * Optional. Leave empty for all files.
+   */
+  batchSize: 2,
+  /**
+   * Array of OpenName file names you want to process & import.
+   * Optional. Leave empty for all files.
+   */
+  // includeFiles: ['TR04.csv'],
+  /**
+   * These custom functions allow for extension of the packages default behaviour.
+   * i.e. They can be used to add custom properties to the neo4j imported nodes.
+   */
+  functions: customFunctions,
+  /**
+   * The folder where this app will write processed csv files.
+   * If neo4j db is on the same storage volume then use a folder that it can read.
+   */
+  neo4jImportDir: '/tmp/shared',
+  /**
+   * If the neo4j connection is remote, and not sharing a storage volume
+   * Then you can set the folder to one that is network accessible.
+   * Also include the url endpoint that neo4j will use to reach this folder.
+   */
+  // neo4jImportDir: '/app/public',
+  // neo4jImportUrl: 'http://app:3000/public',
+};
+
+/**
+ * Start an express server in case we need to serve csv files.
+ */
+if (options.neo4jImportUrl) {
+  initFileServer();
+}
+
 /**
  * This function includes the steps to get
  * data from OS OpenNames API to neo4j database.
  */
-const result = await opennamesToNeo4j(
-  { driver },
-  {
-    // batchSize: 1,
-    // includeFiles: ['TR04.csv'],
-    // includeFiles: ['TV68.csv', 'ST06.csv', 'NA80.csv', 'SN84.csv'],
-    neo4jImportDir: '/tmp/import',
-    functions: customFunctions,
-  }
-);
+const result = await opennamesToNeo4j({ driver }, options);
 
 if (result) console.log(result);
