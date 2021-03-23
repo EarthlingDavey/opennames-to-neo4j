@@ -50,18 +50,22 @@ async function processPlaces(dataSource, headers, options) {
     validRows = 0,
     writePromises = [];
 
+  const validateRow = async (data) => {
+    const rowIsValid = 'Postcode' === data['TYPE'];
+
+    const rowIsValidFiltered = await filters(
+      { rowIsValid, data },
+      'rowIsValid',
+      options
+    );
+
+    return rowIsValidFiltered;
+  };
+
   try {
     csvParseResultPromise = await new Promise((resolve, reject) => {
       fs.createReadStream(filePath)
-        .pipe(
-          csv
-            .parse({ headers })
-            .validate(
-              (data) =>
-                allowedTYPES.includes(data['TYPE']) &&
-                allowedLOCAL_TYPES.includes(data['LOCAL_TYPE'])
-            )
-        )
+        .pipe(csv.parse({ headers }).validate((data) => validateRow(data)))
         .on('error', (error) => {
           console.error(error);
           reject(error);

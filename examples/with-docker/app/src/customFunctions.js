@@ -1,4 +1,18 @@
 /**
+ * Custom constants
+ */
+const allowedTypes = ['populatedPlace', 'other'];
+const allowedLocalTypes = [
+  'Village',
+  'Other Settlement',
+  'Hamlet',
+  'Suburban Area',
+  'Town',
+  'City',
+  'Postcode',
+];
+
+/**
  * Example of how to import data,
  * in addition to the packages defaults of
  * ['id', 'name', 'type', 'lat', 'lng']
@@ -10,6 +24,16 @@ const customFunctions = {
   distCsvHeadersFilter: async ({ distCsvHeaders }) => {
     await distCsvHeaders.push('county');
     return { distCsvHeaders };
+  },
+  /**
+   * Check if the row is valid.
+   * By default only postcodes are valid.
+   */
+  rowIsValidFilter: async ({ rowIsValid, data }) => {
+    return (
+      allowedTypes.includes(data['TYPE']) &&
+      allowedLocalTypes.includes(data['LOCAL_TYPE'])
+    );
   },
   /**
    * If county is on the row, then set it to the
