@@ -48,6 +48,7 @@ const getDbDataSources = async (session, version, options) => {
           fileName: d.fileName,
           filePath: d.filePath,
           importFilePath: d.importFilePath,
+          importFileUrl: d.importFileUrl,
           processed: d.processed,
           imported: d.imported,
           cleaned: d.cleaned,
@@ -82,7 +83,6 @@ const dbSaveDataSources = async (
   dataDir,
   filesArray,
   headers,
-  importFileDir,
   options
 ) => {
   console.log('>>>>>> Start dbSaveDataSources');
@@ -119,7 +119,6 @@ const dbSaveDataSources = async (
       SET
       d.fileName = fileName,
       d.filePath = dataDir + "/" + fileName,
-      d.importFilePath = importFileDir + "/" + fileName,
       d.updatedAt = TIMESTAMP()
 
       MERGE (v)-[:HAS_FILE]->(d)
@@ -130,6 +129,7 @@ const dbSaveDataSources = async (
           fileName: d.fileName,
           filePath: d.filePath,
           importFilePath: d.importFilePath,
+          importFileUrl: d.importFileUrl,
           processed: d.processed,
           imported: d.imported,
           cleaned: d.cleaned,
@@ -148,7 +148,6 @@ const dbSaveDataSources = async (
         dataDir,
         filesArray,
         headers,
-        importFileDir,
         options,
       }
     );
@@ -180,6 +179,7 @@ const updateDataSource = async (session, processedDataSource) => {
         fileName: d.fileName,
         filePath: d.filePath,
         importFilePath: d.importFilePath,
+        importFileUrl: d.importFileUrl,
         processed: d.processed,
         imported: d.imported,
         cleaned: d.cleaned,

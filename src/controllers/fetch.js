@@ -38,20 +38,12 @@ const fetchDataSources = async (session, options, apiVersion) => {
 
   if (!headers) return;
 
-  const importFileDir = path.resolve(
-    options.neo4jImportDir,
-    'os',
-    'OpenNames',
-    apiVersion
-  );
-
   const dbDataSources = await dbSaveDataSources(
     session,
     apiVersion,
     dataDir,
     filesArray,
     headers,
-    importFileDir,
     options
   );
 

@@ -17,7 +17,19 @@ import {
 async function processPlaces(dataSource, headers, options) {
   console.log('>>>>>> Start processPlaces');
 
-  const { filePath, importFilePath } = dataSource;
+  const { filePath } = dataSource;
+
+  const importFilePath = path.resolve(
+    options.neo4jImportDir,
+    'os',
+    'OpenNames',
+    dataSource.version,
+    dataSource.fileName
+  );
+
+  const importFileUrl = options.neo4jImportUrl
+    ? `${options.neo4jImportUrl}/os/OpenNames/${dataSource.version}/${dataSource.fileName}`
+    : null;
 
   const writerHeaders = await filters(
     { distCsvHeaders: [...distCsvHeaders] },
@@ -68,10 +80,14 @@ async function processPlaces(dataSource, headers, options) {
           }
         })
         .on('end', async () => {
-          dataSource.processed = true;
-          dataSource.validRows = validRows;
           await Promise.all(writePromises);
-          resolve(dataSource);
+          resolve({
+            ...dataSource,
+            processed: true,
+            validRows: validRows,
+            importFilePath: importFilePath,
+            importFileUrl: importFileUrl ? importFileUrl : null,
+          });
           return;
         });
     });
@@ -116,13 +132,15 @@ async function importPlaces(session, dataSource, options) {
     validRows: dataSource.validRows,
   });
 
-  const { importFilePath } = dataSource;
+  let { importFilePath, importFileUrl } = dataSource;
+
+  const from = importFileUrl ? importFileUrl : `file://${importFilePath}`;
 
   let statement = `
  
   USING PERIODIC COMMIT 500
   
-  LOAD CSV WITH HEADERS FROM 'file://' + $importFilePath + '' AS place
+  LOAD CSV WITH HEADERS FROM $from AS place
   WITH place 
   
   MERGE (p:Place {
@@ -172,7 +190,7 @@ async function importPlaces(session, dataSource, options) {
   try {
     const result = await session.run(statement, {
       dataSourceId: dataSource.id,
-      importFilePath: importFilePath.replace('/tmp/import', '/shared'),
+      from,
     });
     const count = result.records[0]?.get('count');
 
