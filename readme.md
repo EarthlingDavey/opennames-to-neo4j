@@ -63,33 +63,29 @@ session.close()l
 
 Here is a commented options object.
 
-```javascript
+```js
 const options = {
   /**
    * How many of the OpenName files do you want to process & import?
    * Optional. Leave empty for all files.
-   * Default 10
    */
   batchSize: 10,
 
   /**
    * Array of OpenName file names you want to process & import.
    * Optional. Leave empty for all files.
-   * Default undefined
    */
   // includeFiles: ['TR04.csv'],
 
   /**
    * These custom functions allow for extension of the packages default behaviour.
    * i.e. They can be used to add custom properties to the neo4j imported nodes.
-   * Default {}
    */
-  functions: customFunctions,
+  // functions: customFunctions,
 
   /**
    * The folder where this app will write processed csv files.
    * If neo4j db is on the same storage volume then use a folder that it can read.
-   * Default '/tmp/shared'
    */
   neo4jImportDir: '/tmp/shared',
 
@@ -98,19 +94,21 @@ const options = {
    * Then you can set the folder to one that is network accessible.
    * e.g. '/app/public'
    * Also include the url endpoint that neo4j will use to reach this folder.
-   * Default undefined
    */
   // neo4jImportUrl: 'http://app:3000/public',
 
   /**
    * A pause in seconds between each loop.
    * Useful to prevent from relentlessly hogging resources.
-   * Default { process: 1, import: 1, clean: 1 }
    */
   waits: {
     process: 1,
-    import: 10,
+    import: 1,
     clean: 1,
   },
 };
 ```
+
+### Default behaviour
+
+### Extending functionality
