@@ -1,6 +1,29 @@
+## Background
+
+UK OS
+
 ## What does the package do?
 
 The package is to automate the download and import of OpenNames data to a neo4j database.
+
+It will:
+
+1. Check for new versions
+1. Download OpenNames .zip file
+1. Extract
+1. Create DataSource nodes for each extracted .csv file.
+1. Process source .csv files.
+1. Validate - allows for custom validation of each row.
+1. Transform data  
+   By default, converts OS northing and easting values to standard lat, lng co-ordinates.  
+   Allows for custom data transforms.
+1. Processed data is written to /tmp .csv files.
+1. Imported to neo4j via file or network.
+1. Clean up /tmp files as it goes.
+
+### Visual overview
+
+![Visual overview of opennames-to-neo4j](https://github.com/EarthlingDavey/opennames-to-neo4j/blob/develop/docs/flow.png?raw=true)
 
 ### Requirements
 
