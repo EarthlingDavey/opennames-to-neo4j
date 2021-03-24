@@ -1,5 +1,7 @@
 FROM node:14.16.0-alpine3.13
 
+RUN npm install -g npm
+
 RUN npm install -g nodemon
 
 RUN mkdir -p /app
