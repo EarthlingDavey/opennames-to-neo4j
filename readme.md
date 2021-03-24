@@ -21,13 +21,17 @@ It will:
 1. Imported to neo4j via file or network.
 1. Clean up /tmp files as it goes.
 
+### Function visual overview
+
+![Visual overview of opennames-to-neo4j](https://github.com/EarthlingDavey/opennames-to-neo4j/blob/develop/docs/flow.png?raw=true)
+
+Created with [whimsical.com](https://whimsical.com).
+
 ### Graph Model
 
 ![Graph model of opennames-to-neo4j](https://raw.githubusercontent.com/EarthlingDavey/opennames-to-neo4j/develop/docs/arrows-app/opennames-to-neo4j-graph.svg)
 
-### Visual overview
-
-![Visual overview of opennames-to-neo4j](https://github.com/EarthlingDavey/opennames-to-neo4j/blob/develop/docs/flow.png?raw=true)
+Created with [arrows.app](https://arrows.app). Source at [opennames-to-neo4j-model.json](/docs/arrows-app/opennames-to-neo4j-model.json)
 
 ### Requirements
 

@@ -61,7 +61,8 @@
         "imported": "null",
         "cleaned": "null",
         "filePath": "/tmp/os/OpenNames/2021-01/DATA/SO08.csv",
-        "importFilePath": "/tmp/import/os/OpenNames/2021-01/SO08.csv"
+        "importFilePath": "/tmp/import/os/OpenNames/2021-01/SO08.csv",
+        "validRows": "845"
       }
     },
     {
@@ -155,7 +156,11 @@
       },
       "labels": ["DataSource"],
       "properties": {
-        "id": "2020-11/TV68.csv"
+        "id": "2020-11/TV68.csv",
+        "processed": "true",
+        "imported": "true",
+        "cleaned": "true",
+        "validRows": "547"
       }
     },
     {
