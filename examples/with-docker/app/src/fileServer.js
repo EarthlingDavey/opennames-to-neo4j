@@ -3,7 +3,7 @@ import express from 'express';
 const app = express();
 const port = 3000;
 
-const initFileServer = () => {
+const initFileServer = async () => {
   console.log('>>>>>> Start initFileServer');
 
   app.get('/', (req, res) => {

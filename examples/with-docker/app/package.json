@@ -13,7 +13,8 @@
     "apollo-server": "^2.21.2",
     "express": "^4.17.1",
     "neo4j-driver": "^4.2.3",
-    "neo4j-graphql-js": "^2.19.2"
+    "neo4j-graphql-js": "^2.19.2",
+    "ngrok": "^3.4.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

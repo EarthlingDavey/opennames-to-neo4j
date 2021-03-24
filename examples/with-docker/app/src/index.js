@@ -1,4 +1,5 @@
 import neo4j from 'neo4j-driver';
+import ngrok from 'ngrok';
 import { initApi } from './api.js';
 import { initFileServer } from './fileServer.js';
 import { customFunctions } from './customFunctions.js';
@@ -74,6 +75,14 @@ const options = {
   // neo4jImportDir: '/app/public',
   // neo4jImportUrl: 'http://app:3000/public',
   /**
+   * In case this ap is running locally, and your database is remote.
+   * e.g. https://sandbox.neo4j.com/
+   * Then set neo4jImportDir to '/app/public' & useNgrok to true.
+   * ngrok will create a tunnel so neo4j can reach this local app's server.
+   */
+  // neo4jImportDir: '/app/public',
+  // useNgrok: true,
+  /**
    * A pause in seconds between each loop.
    * Useful to prevent from relentlessly hogging resources.
    */
@@ -84,17 +93,43 @@ const options = {
   },
 };
 
-/**
- * Start an express server in case we need to serve csv files.
- */
-if (options.neo4jImportUrl) {
-  initFileServer();
-}
+(async function () {
+  /**
+   * Start an express server in case we need to serve csv files.
+   */
+  if (options.neo4jImportUrl || options.useNgrok) {
+    try {
+      await initFileServer();
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
-/**
- * This function includes the steps to get
- * data from OS OpenNames API to neo4j database.
- */
-const result = await on2n4j({ driver }, options);
+  /**
+   * Get an ngrok url to allow a remote database to access
+   * a locally running app.
+   */
+  if (options.useNgrok) {
+    try {
+      const url = await ngrok.connect(3000);
+      options.neo4jImportUrl = `${url}/public`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
-if (result) console.log(result);
+  /**
+   * This function includes the steps to get
+   * data from OS OpenNames API to neo4j database.
+   */
+  try {
+    const result = await on2n4j({ driver }, options);
+    if (result) console.log(result);
+  } catch (error) {
+    console.error(error);
+  }
+
+  if (options.useNgrok) {
+    await ngrok.disconnect();
+  }
+})();

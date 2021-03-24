@@ -30,10 +30,11 @@ const customFunctions = {
    * By default only postcodes are valid.
    */
   rowIsValidFilter: async ({ rowIsValid, data }) => {
-    return (
-      allowedTypes.includes(data['TYPE']) &&
-      allowedLocalTypes.includes(data['LOCAL_TYPE'])
-    );
+    return {
+      rowIsValid:
+        allowedTypes.includes(data['TYPE']) &&
+        allowedLocalTypes.includes(data['LOCAL_TYPE']),
+    };
   },
   /**
    * If county is on the row, then set it to the
