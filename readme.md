@@ -1,10 +1,45 @@
+Warning - this is an early release. Exercise caution 😅  
+And, please feedback at neo4j Slack [#neo4j-javascript](https://neo4j-users-slack-invite.herokuapp.com/) or via GitHub [issues tab](https://github.com/EarthlingDavey/opennames-to-neo4j/issues).
+
 ## Background
 
-UK OS
+<details open>
+  <summary>OS Open Names</summary>
+   
+  > A comprehensive dataset of place names, roads numbers and postcodes for Great Britain.  
+  > <cite>[Ordnance Survey](https://www.ordnancesurvey.co.uk/business-government) > [Products](https://www.ordnancesurvey.co.uk/business-government/products) > [Open Names](https://www.ordnancesurvey.co.uk/business-government/products/open-map-names)</cit>
+
+Relevant details about the data:
+
+- Public API with downloads in **CSV**, GML, API and Geopackage formats.
+- Update frequency Quarterly - January, April, July and October
+- Location coordinates supplied in [OSGB36](https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid) grid digits.
+- Free licence with attribution statement - [OGL licence ](https://www.ordnancesurvey.co.uk/business-government/products/open-map-names#licensing)
+
+</details>
+
+<details open>
+  <summary>Motivation, why does this package exist?</summary>
+  
+I'm currently developing an online service for UK users. And, it uses neo4j for the database.
+
+The website needs input field with autocomplete so users can enter their postcode or town/city. The lookup should return latitude & longitude coordinates - they're used for distance calculations.
+
+Having data in a local database has advantages over alternatives.
+
+- No reliance on a third party e.g. Google Maps
+- No rate limits or additional monthly SaaS subscription.
+- Save leaking user details to third party services.
+- Efficient and quicker lookups.
+- neo4j can use the imported Places for queries.
+
+I found that the whole process of moving data from Open Names to neo4j was a considerable undertaking. So I wrote this package to separate the concern from the main app to this standalone package.
+
+</details>
 
 ## What does the package do?
 
-The package is to automate the download and import of OpenNames data to a neo4j database.
+It automates the download and import of Open Names data to a neo4j database.
 
 It will:
 
@@ -29,20 +64,21 @@ Created with [whimsical.com](https://whimsical.com).
 
 ### Graph Model
 
-![Graph model of opennames-to-neo4j](https://raw.githubusercontent.com/EarthlingDavey/opennames-to-neo4j/develop/docs/arrows-app/opennames-to-neo4j-graph.svg)
+![Graph model of opennames-to-neo4j](https://raw.githubusercontent.com/EarthlingDavey/opennames-to-neo4j/develop/docs/arrows-app/opennames-to-neo4j-model.svg)
 
 Created with [arrows.app](https://arrows.app). Source at [opennames-to-neo4j-model.json](/docs/arrows-app/opennames-to-neo4j-model.json)
 
-### Requirements
+## Requirements
 
-You should have a neo4j database.
+1. Have at least 2GB available disk space.
+1. Be able to write to the /tmp directory and
+1. Have a neo4j database.  
+   So that it may read csv files for importing, it should:
 
-1. It should share a storage volume with your nodejs application
-2. Or, should be able to connect via network to your nodejs application
+   - Either, share a storage volume with your nodejs application
+   - Or, be able to connect via network to your nodejs application
 
-This is so that it may read csv files for importing.
-
-### Install
+## Install
 
 Instal with
 
@@ -52,7 +88,7 @@ or
 
 `yarn add opennames-to-neo4j`
 
-### Use
+## Use
 
 Import at the start of your .js file.
 
@@ -85,9 +121,9 @@ on2n4j({ driver }, options);
 ```js
 const session = driver.session();
 //...
-await on2n4j({driver}, options);
+await on2n4j({ driver }, options);
 //...
-session.close()l
+session.close();
 ```
 
 ### Options
@@ -144,4 +180,4 @@ const options = {
 
 ### Extending functionality
 
-### Examples
+## Examples
