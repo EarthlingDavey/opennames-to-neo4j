@@ -3,7 +3,7 @@ And, please feedback at neo4j Slack [#neo4j-javascript](https://neo4j-users-slac
 
 ## Background
 
-<details open>
+<details>
   <summary>OS Open Names</summary>
    
   > A comprehensive dataset of place names, roads numbers and postcodes for Great Britain.  
@@ -18,14 +18,14 @@ Relevant details about the data:
 
 </details>
 
-<details open>
+<details>
   <summary>Motivation, why does this package exist?</summary>
   
 I'm currently developing an online service for UK users. And, it uses neo4j for the database.
 
-The website needs input field with autocomplete so users can enter their postcode or town/city. The lookup should return latitude & longitude coordinates - they're used for distance calculations.
+The website needs an input field with autocomplete so users can enter their postcode or town/city. The lookup should return latitude & longitude coordinates - they're used for distance calculations.
 
-Having data in a local database has advantages over alternatives.
+Having data in a database under my own control has advantages over alternatives.
 
 - No reliance on a third party e.g. Google Maps
 - No rate limits or additional monthly SaaS subscription.
@@ -39,9 +39,7 @@ I found that the whole process of moving data from Open Names to neo4j was a con
 
 ## What does the package do?
 
-It automates the download and import of Open Names data to a neo4j database.
-
-It will:
+It automates the download and import of Open Names data to a neo4j database. It will:
 
 1. Check for new versions
 1. Download OpenNames .zip file
@@ -82,11 +80,7 @@ Created with [arrows.app](https://arrows.app). Source at [opennames-to-neo4j-mod
 
 Instal with
 
-`npm i opennames-to-neo4j`
-
-or
-
-`yarn add opennames-to-neo4j`
+`npm i opennames-to-neo4j` or `yarn add opennames-to-neo4j`
 
 ## Use
 
@@ -163,6 +157,15 @@ const options = {
    * Also include the url endpoint that neo4j will use to reach this folder.
    */
   // neo4jImportUrl: 'http://app:3000/public',
+
+  /**
+   * In case this app is running locally, and your database is remote.
+   * e.g. https://sandbox.neo4j.com/
+   * Then set neo4jImportDir to '/app/public' & useNgrok to true.
+   * ngrok will create a tunnel so neo4j can reach this local app's server.
+   */
+  // neo4jImportDir: '/app/public',
+  // useNgrok: true,
 
   /**
    * A pause in seconds between each loop.

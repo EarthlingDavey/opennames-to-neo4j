@@ -3,8 +3,9 @@
   "version": "0.0.27",
   "type": "module",
   "scripts": {
-    "start:dev": "nodemon --watch src --ext js --exec babel-node  src/index.js",
+    "start:dev": "nodemon --watch src --ext js --exec node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test:watch": "nodemon --watch src --watch tests --exec babel-node tests/index.js",
     "build": "babel src --out-dir dist",
     "build:watch": "nodemon --watch src --ext js --exec babel src --out-dir dist"
   },

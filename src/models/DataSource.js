@@ -147,7 +147,7 @@ const dbSaveDataSources = async (
         dataDir,
         filesArray,
         headers,
-        options,
+        options: { batchSize: options.batchSize },
       }
     );
 
