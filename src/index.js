@@ -7,7 +7,7 @@ import { defaultOptions } from './utils/defaults.js';
  * Models.
  */
 import { getDbDataSources, updateDataSource } from './models/DataSource.js';
-import { deleteFiles } from './models/File.js';
+import { deleteFiles } from './utils/files.js';
 import { processPlaces, importPlaces } from './models/Place.js';
 import { getOsProductVersion } from './models/Product.js';
 /**

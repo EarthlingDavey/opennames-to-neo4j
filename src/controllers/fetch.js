@@ -4,7 +4,7 @@ import os from 'os';
 
 import { maybeDownloadProduct } from '../models/Product.js';
 
-import { extractZip, getFilesArray } from '../models/File.js';
+import { extractZip, getFilesArray } from '../utils/files.js';
 
 import {
   readDataSourceHeaders,

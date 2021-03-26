@@ -1,6 +1,8 @@
 .env
+docker-compose.yml
 docker/neo4j/logs
 docs/arrows-app
 docs/flow.png
 examples
 **/node_modules
+**/tmp
