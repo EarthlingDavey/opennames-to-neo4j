@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
+import os from 'os';
 
 import { maybeDownloadProduct } from '../models/Product.js';
 
@@ -17,7 +18,8 @@ const fetchDataSources = async (session, options, apiVersion) => {
 
   if (!zipFilePath) return;
 
-  const extractTarget = path.resolve('/tmp', 'os', 'OpenNames', apiVersion);
+  const extractTarget = path.resolve('./tmp', apiVersion);
+  // const extractTarget = path.join(os.tmpdir(), 'os', 'OpenNames', apiVersion);
 
   const extracted = await extractZip(zipFilePath, extractTarget);
 

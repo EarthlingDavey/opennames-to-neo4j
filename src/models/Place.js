@@ -3,7 +3,7 @@ import path from 'path';
 import proj4 from 'proj4';
 import csvWriter from 'csv-write-stream';
 
-const csv = require('@fast-csv/parse');
+import csv from '@fast-csv/parse';
 
 import { filters } from '../utils/filters.js';
 

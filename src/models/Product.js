@@ -1,5 +1,7 @@
 import axios from 'axios';
+import path from 'path';
 import fs from 'fs-extra';
+import os from 'os';
 import md5File from 'md5-file';
 
 async function getOsProductList() {
@@ -54,8 +56,8 @@ const maybeDownloadProduct = async (productId, version) => {
     return;
   }
 
-  const dir = `/tmp/os/${productId}/${version}`;
-  const filePath = `${dir}/${downloadInfo.fileName}`;
+  const dir = path.join(os.tmpdir(), 'os', 'OpenNames', version);
+  const filePath = path.join(dir, downloadInfo.fileName);
 
   await fs.ensureDir(dir);
 

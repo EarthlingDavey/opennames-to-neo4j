@@ -16,6 +16,7 @@ const getZipVersion = async (productId) => {
 const extractZip = async (zipFilePath, extractTarget) => {
   console.debug('>>>>>> in extractZip');
   console.log(extractTarget);
+  await fs.ensureDir(extractTarget);
   // return true;
   try {
     await extract(zipFilePath, { dir: extractTarget });

@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-const csv = require('@fast-csv/parse');
+import csv from '@fast-csv/parse';
 
 const readDataSourceHeaders = async (dir) => {
   console.log('>>>>>> Start readDataSourceHeaders');
@@ -150,6 +150,8 @@ const dbSaveDataSources = async (
         options,
       }
     );
+
+    console.log('<<<<<< End dbSaveDataSources');
 
     return {
       dataSources: result.records[0]?.get('dataSource'),

@@ -266,6 +266,4 @@ const main = async (session, options) => {
   return { summary, errors, dataSources };
 };
 
-const on2n4j = sessionWrapper;
-
-export { on2n4j };
+export default sessionWrapper;
