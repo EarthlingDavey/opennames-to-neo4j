@@ -9,7 +9,7 @@ import {
   deleteFiles,
 } from '../src/utils/files.js';
 
-describe.only('check util/files functions ', () => {
+describe('check util/files functions ', () => {
   it('check downloadFile', async () => {
     let downloaded, readContent;
     try {

@@ -131,17 +131,7 @@ async function processRow(row) {
   return newPlace;
 }
 
-async function importPlaces(session, dataSource, options) {
-  console.debug('>>>>>> Start importPlaces');
-  console.debug({
-    validRows: dataSource.validRows,
-  });
-
-  let { importFilePath, importFileUrl } = dataSource;
-
-  const from = importFileUrl ? importFileUrl : `file://${importFilePath}`;
-
-  let statement = `
+let importStatement = `
  
   USING PERIODIC COMMIT 500
   
@@ -179,21 +169,31 @@ async function importPlaces(session, dataSource, options) {
   } AS importedDataSource
   `;
 
-  if (options?.functions?.place?.filterImportStatement) {
-    statement = await options?.functions?.place?.filterImportStatement(
-      statement,
-      dataSource
-    );
-  }
+async function importPlaces(session, dataSource, options) {
+  console.debug('>>>>>> Start importPlaces');
+  console.debug({
+    validRows: dataSource.validRows,
+  });
 
-  statement = await filters(
-    { placeImportStatement: statement },
+  let { importFilePath, importFileUrl } = dataSource;
+
+  const from = importFileUrl ? importFileUrl : `file://${importFilePath}`;
+
+  // if (options?.functions?.place?.filterImportStatement) {
+  //   statement = await options?.functions?.place?.filterImportStatement(
+  //     statement,
+  //     dataSource
+  //   );
+  // }
+
+  importStatement = await filters(
+    { placeImportStatement: importStatement },
     'placeImportStatement',
     options
   );
 
   try {
-    const result = await session.run(statement, {
+    const result = await session.run(importStatement, {
       dataSourceId: dataSource.id,
       from,
     });
@@ -215,4 +215,4 @@ async function importPlaces(session, dataSource, options) {
   }
 }
 
-export { processPlaces, importPlaces };
+export { processPlaces, importPlaces, importStatement };
