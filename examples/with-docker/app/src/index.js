@@ -75,7 +75,7 @@ const options = {
   // neo4jImportDir: '/app/public',
   // neo4jImportUrl: 'http://app:3000/public',
   /**
-   * In case this ap is running locally, and your database is remote.
+   * In case this app is running locally, and your database is remote.
    * e.g. https://sandbox.neo4j.com/
    * Then set neo4jImportDir to '/app/public' & useNgrok to true.
    * ngrok will create a tunnel so neo4j can reach this local app's server.
