@@ -1,13 +1,19 @@
 import fs from 'fs-extra';
+import path from 'path';
 import csv from '@fast-csv/parse';
 
 const readDataSourceHeaders = async (dir) => {
-  console.log('>>>>>> Start readDataSourceHeaders');
-  const filePath = `${dir}/DOC/OS_Open_Names_Header.csv`;
+  // console.log('>>>>>> Start readDataSourceHeaders');
   try {
+    const filePath = path.join(
+      path.resolve(dir),
+      'DOC',
+      'OS_Open_Names_Header.csv'
+    );
     const headers = await new Promise((resolve, reject) => {
       let headers = [];
       fs.createReadStream(filePath)
+        .on('error', (error) => reject(error))
         .pipe(csv.parse({ headers: false }))
         .on('error', (error) => reject(error))
         .on('data', (row) => (headers = row))
