@@ -16,7 +16,9 @@ import {
 } from '../utils/defaults.js';
 
 async function processPlaces(dataSource, headers, options) {
-  console.log('>>>>>> Start processPlaces');
+  // console.log('>>>>>> Start processPlaces');
+
+  // console.log({ dataSource, headers, options });
 
   const { filePath } = dataSource;
 
@@ -51,7 +53,8 @@ async function processPlaces(dataSource, headers, options) {
     writePromises = [];
 
   const validateRow = async (data) => {
-    const rowIsValid = 'Postcode' === data['TYPE'];
+    // TODO: Here check ID, NAME etc. exist
+    const rowIsValid = 'Postcode' === data['LOCAL_TYPE'];
 
     const rowIsValidFiltered = await filters(
       { rowIsValid, data },
@@ -65,9 +68,17 @@ async function processPlaces(dataSource, headers, options) {
   try {
     csvParseResultPromise = await new Promise((resolve, reject) => {
       fs.createReadStream(filePath)
-        .pipe(csv.parse({ headers }).validate((data) => validateRow(data)))
         .on('error', (error) => {
-          console.error(error);
+          // In-case file doesn't exist
+          reject(error);
+        })
+        .pipe(
+          csv.parse({ headers }).validate((data, cb) => {
+            setImmediate(async () => cb(null, await validateRow(data)));
+          })
+        )
+        .on('error', (error) => {
+          // console.error(error);
           reject(error);
         })
         .on('data', async (row) => {
@@ -98,27 +109,46 @@ async function processPlaces(dataSource, headers, options) {
     });
   } catch (error) {
     // Handle rejection here
-    console.log(error);
+    // console.log(error);
+    throw error;
   }
 
   const csvParseResult = await csvParseResultPromise;
 
   writer.end();
 
+  /**
+   * This is a fallback clause to throw an error in-case where
+   * csvParseResult is not a valid result AND an error was not thrown earlier.
+   */
+  /* c8 ignore next 3 */
   if (!csvParseResult) {
-    console.error('dataSource failed to process', { dataSource });
+    throw ('dataSource failed to process', { dataSource });
   }
 
-  console.log('<<<<<< End processPlaces');
-
+  // console.log('<<<<<< End processPlaces');
   return csvParseResult;
 }
 
 async function processRow(row) {
-  const coordinates = proj4(OSGB36, WGS84, {
-    x: parseFloat(row.GEOMETRY_X),
-    y: parseFloat(row.GEOMETRY_Y),
-  });
+  let coordinates;
+
+  try {
+    coordinates = proj4(OSGB36, WGS84, {
+      x: parseFloat(row.GEOMETRY_X),
+      y: parseFloat(row.GEOMETRY_Y),
+    });
+    if (
+      typeof coordinates.x !== 'number' ||
+      typeof coordinates.y !== 'number' ||
+      isNaN(coordinates.x) ||
+      isNaN(coordinates.y)
+    ) {
+      throw 'coordinate is not a number';
+    }
+  } catch (error) {
+    throw error;
+  }
 
   const newPlace = {
     id: row.ID,
@@ -215,4 +245,4 @@ async function importPlaces(session, dataSource, options) {
   }
 }
 
-export { processPlaces, importPlaces, importStatement };
+export { processPlaces, processRow, importPlaces, importStatement };

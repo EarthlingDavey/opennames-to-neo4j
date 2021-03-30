@@ -42,12 +42,6 @@ describe('check product ', () => {
     } finally {
       expect(actual.data).to.be.an('array');
       expect(actual.status).to.equal(200);
-      // expect(actual.md5).to.have.lengthOf(32);
-      // expect(actual.size).to.match(/^\d+$/);
-      // expect(actual.format).to.equal('CSV');
-      // expect(actual.area).to.equal('GB');
-      // expect(actual.fileName).to.equal('opname_csv_gb.zip');
-      // expect(actual.url).to.match(/^https:\/\/api\.os\.uk/);
     }
   });
 
