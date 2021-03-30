@@ -61,18 +61,18 @@ const getFileContents = async (filePath) => {
   return data;
 };
 
-const getFilesArray = async (dir) => {
-  // console.debug('>>>>>> in getFilesArray');
+const getCsvFilesArray = async (dir) => {
+  // console.debug('>>>>>> in getCsvFilesArray');
 
   try {
     const allFiles = await fs.readdir(dir);
 
     if (!allFiles || !allFiles.length) {
-      return false;
+      return allFiles;
     }
     return allFiles.filter((filename) => filename.endsWith('.csv'));
   } catch (error) {
-    console.error('error array of files was empty', { error });
+    // console.error('error array of files was empty', { error });
     throw error;
   }
 };
@@ -85,7 +85,7 @@ const deleteFile = async (file) => {
     if (!fileExists) throw "File doesn't exist.";
     await fs.unlink(file);
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     throw error;
   }
 
@@ -96,10 +96,13 @@ const deleteFile = async (file) => {
 const deleteFiles = async (files) => {
   // console.debug('>>>>>> in deleteFiles');
 
+  if (!files || 0 === files.length) {
+    throw 'deleteFiles, no files';
+  }
+
   let failed = 0;
 
   for (const file of files) {
-    if (!file) continue;
     let didDelete;
     try {
       didDelete = await deleteFile(file);
@@ -116,7 +119,7 @@ export {
   downloadFile,
   extractZip,
   getFileContents,
-  getFilesArray,
+  getCsvFilesArray,
   deleteFile,
   deleteFiles,
 };

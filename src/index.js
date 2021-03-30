@@ -3,13 +3,19 @@ import fs from 'fs-extra';
  * Defaults and constants.
  */
 import { defaultOptions } from './utils/defaults.js';
+
 /**
  * Models.
  */
-import { getDbDataSources, updateDataSource } from './models/DataSource.js';
+import {
+  getDbDataSources,
+  dbSaveDataSources,
+  updateDataSource,
+} from './models/DataSource.js';
 import { deleteFiles } from './utils/files.js';
 import { processPlaces, importPlaces } from './models/Place.js';
 import { getOsProductVersion } from './models/Product.js';
+
 /**
  * Helpers.
  */
@@ -19,6 +25,7 @@ import {
   mergeDeep,
   waitSeconds,
 } from './utils/utils.js';
+
 /**
  * Fetch.
  */
@@ -93,8 +100,15 @@ const main = async (session, options) => {
    * Then fetch it.
    */
   if (!dbResult?.dataSources?.length) {
-    dbResult = await fetchDataSources(session, options, apiVersion);
-    summary.fetched = true;
+    const fetchedDataSources = await fetchDataSources(options, apiVersion);
+    if (fetchedDataSources) {
+      dbResult = await dbSaveDataSources(session, {
+        options,
+        version: apiVersion,
+        ...fetchedDataSources,
+      });
+      summary.fetched = true;
+    }
   } else {
     summary.cached = true;
   }

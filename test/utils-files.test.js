@@ -1,10 +1,11 @@
 import { expect } from 'chai';
+import fs from 'fs-extra';
 
 import {
   downloadFile,
   extractZip,
   getFileContents,
-  getFilesArray,
+  getCsvFilesArray,
   deleteFile,
   deleteFiles,
 } from '../src/utils/files.js';
@@ -46,7 +47,6 @@ describe('check util/files functions ', () => {
       expect(error).to.be.undefined;
       return false;
     } finally {
-      console.log(readContent);
       expect(readContent).to.equal('!function(){};');
     }
   });
@@ -108,17 +108,47 @@ describe('check util/files functions ', () => {
     }
   });
 
-  it('check getFilesArray', async () => {
+  it('check getCsvFilesArray', async () => {
     let actual;
     const expected = ['HP40.csv', 'HP60.csv'];
     try {
       const dataDir = `./tmp/for-test/opname_csv_gb/DATA`;
-      actual = await getFilesArray(dataDir);
+      actual = await getCsvFilesArray(dataDir);
     } catch (error) {
       expect(error).to.be.undefined;
       return;
     } finally {
       expect(actual).to.deep.equal(expected);
+    }
+  });
+
+  it('check getCsvFilesArray: empty directory', async () => {
+    let actual;
+    const dir = `./test/assets/empty-directory`;
+    await fs.ensureDir(dir);
+
+    try {
+      actual = await getCsvFilesArray(dir);
+    } catch (error) {
+      console.log(error);
+      expect(error).to.be.undefined;
+      return;
+    } finally {
+      expect(actual).to.deep.equal([]);
+    }
+  });
+
+  it('check getCsvFilesArray: directory does not exist', async () => {
+    let actual;
+    const dir = `./test/assets/does-not-exist`;
+
+    try {
+      actual = await getCsvFilesArray(dir);
+    } catch (error) {
+      expect(error).to.exist;
+      return;
+    } finally {
+      expect(actual).to.be.undefined;
     }
   });
 
@@ -136,6 +166,20 @@ describe('check util/files functions ', () => {
     }
   });
 
+  it('check deleteFile: file does not exist', async () => {
+    let actual;
+    const toDelete = './test/assets/does-not-exist.min.js';
+
+    try {
+      actual = await deleteFile(toDelete);
+    } catch (error) {
+      expect(error).to.exist;
+      return;
+    } finally {
+      expect(actual).to.be.undefined;
+    }
+  });
+
   it('check deleteFiles', async () => {
     let actual;
     const toDelete = [
@@ -150,6 +194,33 @@ describe('check util/files functions ', () => {
       return;
     } finally {
       expect(actual).to.be.true;
+    }
+  });
+
+  it('check deleteFile: empty array', async () => {
+    let actual;
+
+    try {
+      actual = await deleteFiles([]);
+    } catch (error) {
+      expect(error).to.exist;
+      return;
+    } finally {
+      expect(actual).to.be.undefined;
+    }
+  });
+
+  it('check deleteFile: files does not exist', async () => {
+    let actual;
+    const toDelete = ['./test/assets/does-not-exist.min.js'];
+
+    try {
+      actual = await deleteFiles(toDelete);
+    } catch (error) {
+      expect(error).to.exist;
+      return;
+    } finally {
+      expect(actual).to.be.undefined;
     }
   });
 });

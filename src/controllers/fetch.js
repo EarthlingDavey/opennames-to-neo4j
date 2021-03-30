@@ -4,31 +4,47 @@ import os from 'os';
 
 import { maybeDownloadProduct } from '../models/Product.js';
 
-import { extractZip, getFilesArray } from '../utils/files.js';
+import { extractZip, getCsvFilesArray } from '../utils/files.js';
 
-import {
-  readDataSourceHeaders,
-  dbSaveDataSources,
-} from '../models/DataSource.js';
+import { readDataSourceHeaders } from '../models/DataSource.js';
+/**
+ * Test coverage notes.
+ * c8 ignore next is used when this function cannot trigger
+ * error states from the contained functions.
+ * The functions in question have their own tests.
+ * @param {Object} options
+ * @param {String} version
+ * @returns {Object}
+ */
+const fetchDataSources = async (options, version) => {
+  console.log('>>>>>> Start fetchDataSources', { version });
 
-const fetchDataSources = async (session, options, apiVersion) => {
-  console.log('>>>>>> Start fetchDataSources');
+  let zipFilePath, extracted, filesArray, headers;
 
-  const zipFilePath = await maybeDownloadProduct('OpenNames', apiVersion);
+  try {
+    zipFilePath = await maybeDownloadProduct('OpenNames', version);
+  } catch (error) {
+    throw error;
+  }
 
-  if (!zipFilePath) return;
+  // const extractTarget = path.resolve('./tmp', version);
+  const extractTarget = path.join(os.tmpdir(), 'os', 'OpenNames', version);
 
-  const extractTarget = path.resolve('./tmp', apiVersion);
-  // const extractTarget = path.join(os.tmpdir(), 'os', 'OpenNames', apiVersion);
+  try {
+    extracted = await extractZip(zipFilePath, extractTarget);
+    /* c8 ignore next 3 */
+  } catch (error) {
+    throw error;
+  }
 
-  const extracted = await extractZip(zipFilePath, extractTarget);
+  const dataDir = path.join(extractTarget, 'DATA');
 
-  if (!extracted) return;
-
-  const dataDir = `${extractTarget}/DATA`;
-  let filesArray = await getFilesArray(dataDir);
-
-  if (!filesArray) return;
+  try {
+    filesArray = await getCsvFilesArray(dataDir);
+    /* c8 ignore next 3 */
+  } catch (error) {
+    throw error;
+  }
 
   if (options.includeFiles?.length) {
     filesArray = filesArray.filter((fileName) =>
@@ -36,22 +52,20 @@ const fetchDataSources = async (session, options, apiVersion) => {
     );
   }
 
-  const headers = await readDataSourceHeaders(extractTarget);
-
-  if (!headers) return;
-
-  const dbDataSources = await dbSaveDataSources(
-    session,
-    apiVersion,
-    dataDir,
-    filesArray,
-    headers,
-    options
-  );
+  try {
+    headers = await readDataSourceHeaders(extractTarget);
+    /* c8 ignore next 3 */
+  } catch (error) {
+    throw error;
+  }
 
   console.log('<<<<<< End fetchDataSources');
 
-  return dbDataSources;
+  return {
+    dataDir,
+    filesArray,
+    headers,
+  };
 };
 
 export { fetchDataSources };

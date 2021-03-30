@@ -9,14 +9,13 @@ const readDataSourceHeaders = async (dir) => {
       let headers = [];
       fs.createReadStream(filePath)
         .pipe(csv.parse({ headers: false }))
-        .on('error', (error) => console.error(error))
+        .on('error', (error) => reject(error))
         .on('data', (row) => (headers = row))
         .on('end', () => resolve(headers));
     });
     return headers;
   } catch (error) {
-    console.error('error could not read csv headers', error);
-    return false;
+    throw error;
   }
 };
 
@@ -79,15 +78,14 @@ const getDbDataSources = async (session, version, options) => {
 
 const dbSaveDataSources = async (
   session,
-  version,
-  dataDir,
-  filesArray,
-  headers,
-  options
+  { version, dataDir, filesArray, headers, options }
 ) => {
   console.log('>>>>>> Start dbSaveDataSources');
 
-  console.log(options);
+  if (!version || !dataDir || !filesArray || !headers) {
+    throw 'dbSaveDataSources, properties are missing';
+  }
+  // console.log(options);
 
   // return;
   try {

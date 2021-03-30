@@ -33,7 +33,8 @@ describe('check product ', () => {
   it('check get product download info', async () => {
     let actual;
     try {
-      actual = await getProductDownloadInfo('OpenNames');
+      const apiVersion = await getOsProductVersion('OpenNames');
+      actual = await getProductDownloadInfo('OpenNames', apiVersion);
     } catch (error) {
       expect(error).to.be.undefined;
     } finally {

@@ -24,6 +24,7 @@ async function getOsProduct(id) {
   });
   return product;
 }
+
 async function getOsProductVersion(id) {
   try {
     const product = await getOsProduct(id);
@@ -36,28 +37,40 @@ async function getOsProductVersion(id) {
   }
 }
 
-const getProductDownloadInfo = async (id) => {
+const getProductDownloadInfo = async (id, version) => {
   const product = await getOsProduct(id);
-  if (!product?.data.downloadsUrl) {
-    console.error('no downloadsUrl');
-    return;
+
+  if (!product?.data?.version || product?.data?.version !== version) {
+    throw `version not found: ${version}`;
   }
+
+  if (!product?.data.downloadsUrl) {
+    throw `no downloadsUrl: ${version}`;
+  }
+
   // console.log(product.data.downloadsUrl);
   const downloads = await axios(product.data.downloadsUrl).catch((err) => {
     // what now?
     console.error('no download data');
   });
 
-  return downloads.data.find(({ format }) => 'CSV' === format);
+  const csvDownload = downloads.data.find(({ format }) => 'CSV' === format);
+
+  if (!csvDownload || !csvDownload.url || !csvDownload.fileName) {
+    throw 'error  no url or filename for csv download';
+  }
+
+  return csvDownload;
 };
 
 const maybeDownloadProduct = async (productId, version) => {
-  const downloadInfo = await getProductDownloadInfo(productId);
-  console.log(downloadInfo);
+  let downloadInfo;
 
-  if (!downloadInfo.url || !downloadInfo.fileName) {
-    console.error('error downloading zip, no url or filename');
-    return;
+  try {
+    downloadInfo = await getProductDownloadInfo(productId, version);
+  } catch (error) {
+    console.log({ error });
+    throw error;
   }
 
   const dir = path.join(os.tmpdir(), 'os', 'OpenNames', version);
@@ -83,8 +96,7 @@ const maybeDownloadProduct = async (productId, version) => {
   const hash = await md5File(filePath);
 
   if (hash.toUpperCase() !== downloadInfo.md5.toUpperCase()) {
-    console.error("downloaded file does not match API's md5");
-    return false;
+    throw "downloaded file does not match API's md5";
   }
 
   return filePath;
