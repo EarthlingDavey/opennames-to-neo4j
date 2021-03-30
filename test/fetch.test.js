@@ -25,7 +25,7 @@ describe('check fetchDataSources ', () => {
     expect(fetchedDataSources.dataDir).to.be.a('string');
     expect(fetchedDataSources.filesArray).to.be.an('array');
     expect(fetchedDataSources.headers).to.be.an('array');
-  }).timeout(60000);
+  }).timeout(120000);
 
   it('check fetchDataSources: invalid version', async () => {
     const apiVersion = '1997-01';

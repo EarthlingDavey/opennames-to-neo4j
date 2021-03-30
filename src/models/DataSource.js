@@ -26,9 +26,9 @@ const readDataSourceHeaders = async (dir) => {
 };
 
 const getDbDataSources = async (session, version, options) => {
-  console.log('>>>>>> Start getDbDataSources');
-  console.log({ version, options });
-  console.log(options.includeFiles);
+  // console.log('>>>>>> Start getDbDataSources');
+  // console.log({ version, options });
+  // console.log(options.includeFiles);
 
   const query = `
       MATCH (product:OsProduct {
@@ -86,7 +86,7 @@ const dbSaveDataSources = async (
   session,
   { version, dataDir, filesArray, headers, options }
 ) => {
-  console.log('>>>>>> Start dbSaveDataSources');
+  // console.log('>>>>>> Start dbSaveDataSources');
 
   if (!version || !dataDir || !filesArray || !headers) {
     throw 'dbSaveDataSources, properties are missing';
@@ -139,7 +139,7 @@ const dbSaveDataSources = async (
           validRows: d.validRows,
           version: v.id
         })
-          ${options.batchSize ? `[0..$options.batchSize]` : ``}
+          ${options?.batchSize ? `[0..$options.batchSize]` : ``}
         AS 
           dataSource,
         product AS product, 
@@ -151,26 +151,34 @@ const dbSaveDataSources = async (
         dataDir,
         filesArray,
         headers,
-        options: { batchSize: options.batchSize },
+        options: { batchSize: options?.batchSize },
       }
     );
 
-    console.log('<<<<<< End dbSaveDataSources');
+    // console.log('<<<<<< End dbSaveDataSources');
 
     return {
       dataSources: result.records[0]?.get('dataSource'),
       headers: result.records[0]?.get('headers'),
     };
   } catch (error) {
-    console.log(error);
-    return false;
+    // console.log(error);
+    // return false;
+    throw error;
   }
 };
 
 const updateDataSource = async (session, processedDataSource) => {
-  console.log('>>>>>> Start updateDataSource');
+  // console.log('>>>>>> Start updateDataSource');
 
   const { id, ...properties } = processedDataSource;
+
+  if (!id) {
+    throw 'updateDataSource, id missing';
+  }
+  if (!properties) {
+    throw 'updateDataSource, no properties to update';
+  }
 
   try {
     const result = await session.run(
@@ -200,19 +208,22 @@ const updateDataSource = async (session, processedDataSource) => {
     const updatedDataSource = result.records[0]?.get('dataSource');
 
     if (!updatedDataSource) {
-      console.error('dataSource failed to update in db', {
-        processedDataSource,
-      });
+      throw (
+        ('dataSource failed to update in db',
+        {
+          processedDataSource,
+        })
+      );
     }
 
     return updatedDataSource;
   } catch (error) {
-    console.log(error);
-    return false;
+    // console.log(error);
+    throw error;
   }
-
-  return;
 };
+
+// TODO: delete dataSource, then make it the first test
 
 export {
   readDataSourceHeaders,
