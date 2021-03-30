@@ -40,7 +40,7 @@ const extractZip = async (zipFilePath, extractTarget) => {
   try {
     await extract(zipFilePath, { dir: extractTarget });
   } catch (e) {
-    console.error('error extracting zip', { e });
+    // console.error('error extracting zip', { e });
     throw e;
   }
   // console.debug('Extraction complete');
@@ -55,7 +55,7 @@ const getFileContents = async (filePath) => {
   try {
     data = fs.readFileSync(filePath, 'utf8');
   } catch (e) {
-    console.error('error reading file', { e });
+    // console.error('error reading file', { e });
     throw e;
   }
   return data;

@@ -37,11 +37,40 @@ describe('check util/files functions ', () => {
     }
   });
 
+  it('check getFileContents', async () => {
+    let readContent;
+
+    try {
+      readContent = await getFileContents('./test/assets/test.min.js');
+    } catch (error) {
+      expect(error).to.be.undefined;
+      return false;
+    } finally {
+      console.log(readContent);
+      expect(readContent).to.equal('!function(){};');
+    }
+  });
+
+  it('check getFileContents: error', async () => {
+    let readContent;
+
+    try {
+      readContent = await getFileContents(
+        './test/assets/does-not-exist.min.js'
+      );
+    } catch (error) {
+      expect(error).to.exist;
+      return;
+    } finally {
+      expect(readContent).to.be.undefined;
+    }
+  });
+
   it('check extractZip', async () => {
     let extracted, readContent;
     try {
       extracted = await extractZip(
-        './test/test_opname_csv_gb.zip',
+        './test/assets/test_opname_csv_gb.zip',
         './tmp/for-test'
       );
     } catch (error) {
@@ -61,6 +90,21 @@ describe('check util/files functions ', () => {
       return false;
     } finally {
       expect(readContent).to.exist;
+    }
+  });
+
+  it('check extractZip: error', async () => {
+    let extracted;
+    try {
+      extracted = await extractZip(
+        './test/assets/does-not-exist.zip',
+        './tmp/for-test'
+      );
+    } catch (error) {
+      expect(error).to.exist;
+      return;
+    } finally {
+      expect(extracted).to.be.undefined;
     }
   });
 

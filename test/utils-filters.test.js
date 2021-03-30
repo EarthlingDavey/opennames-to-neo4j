@@ -71,8 +71,8 @@ describe('check util/filter functions ', () => {
     };
     const processedRow = {
       id: 'AB12 3CD',
-      lat: 0.5,
-      lng: 50,
+      lat: 50,
+      lng: 0.5,
       name: 'AB12 3CD',
       type: 'Postcode',
     };

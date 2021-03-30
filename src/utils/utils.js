@@ -19,8 +19,7 @@ const getNeo4jSession = (connection) => {
     return { session: driver.session(), shouldCloseSession: true };
   }
 
-  console.error('no connection driver or credentials');
-  return { session: undefined, shouldCloseSession: undefined };
+  throw 'You must define session,driver or, connection strings';
 };
 
 const mergeByProperty = (target, source, prop) => {
@@ -50,7 +49,7 @@ function mergeDeep(...objects) {
       const oVal = obj[key];
 
       if (Array.isArray(pVal) && Array.isArray(oVal)) {
-        prev[key] = pVal.concat(...oVal);
+        prev[key] = [...new Set([...oVal, ...pVal])];
       } else if (isObject(pVal) && isObject(oVal)) {
         prev[key] = mergeDeep(pVal, oVal);
       } else {

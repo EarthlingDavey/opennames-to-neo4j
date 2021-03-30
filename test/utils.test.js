@@ -53,6 +53,19 @@ describe('check utility functions ', () => {
     expected.session.close();
   });
 
+  it('check getNeo4jSession: invalid', () => {
+    let actual;
+
+    try {
+      actual = getNeo4jSession({ invalid: 'invalid' });
+    } catch (error) {
+      expect(error).to.equal(
+        'You must define session,driver or, connection strings'
+      );
+    } finally {
+    }
+  });
+
   it('check mergeByProperty', () => {
     let dataSources = [
       {
@@ -62,6 +75,10 @@ describe('check utility functions ', () => {
         cleaned: null,
         filePath: '/tmp/os/OpenNames/2021-01/DATA/TV68.csv',
       },
+      {
+        id: '2021-01/TV69.csv',
+        processed: null,
+      },
     ];
     const processedDataSources = [
       {
@@ -69,6 +86,10 @@ describe('check utility functions ', () => {
         processed: true,
         importFilePath: '/tmp/import/os/OpenNames/2021-01/TV68.csv',
         validRows: 845,
+      },
+      {
+        id: '2021-01/TV70.csv',
+        processed: true,
       },
     ];
 
@@ -84,14 +105,23 @@ describe('check utility functions ', () => {
         importFilePath: '/tmp/import/os/OpenNames/2021-01/TV68.csv',
         validRows: 845,
       },
+      {
+        id: '2021-01/TV69.csv',
+        processed: null,
+      },
+      {
+        id: '2021-01/TV70.csv',
+        processed: true,
+      },
     ];
 
     expect(dataSources).to.deep.equal(expected);
   });
 
-  it('check mergeDeep', () => {
-    const defaultOptions = {
+  it('check mergeDeep: objects', () => {
+    const options1 = {
       batchSize: 10,
+      includeFiles: ['TR04.csv'],
       neo4jImportDir: '/tmp/import',
       waits: {
         process: 1,
@@ -106,8 +136,8 @@ describe('check utility functions ', () => {
         return { distCsvHeaders };
       },
     };
-    let options = {
-      includeFiles: ['TR04.csv'],
+    const options2 = {
+      includeFiles: ['TR04.csv', 'TR05.csv'],
       functions: customFunctions,
       neo4jImportDir: '/app/public',
       neo4jImportUrl: 'http://app:3000/public',
@@ -117,7 +147,7 @@ describe('check utility functions ', () => {
     };
     const expected = {
       batchSize: 10,
-      includeFiles: ['TR04.csv'],
+      includeFiles: ['TR04.csv', 'TR05.csv'],
       functions: customFunctions,
       neo4jImportDir: '/app/public',
       neo4jImportUrl: 'http://app:3000/public',
@@ -128,9 +158,9 @@ describe('check utility functions ', () => {
       },
     };
 
-    options = mergeDeep(defaultOptions, options);
+    const options3 = mergeDeep(options1, options2);
 
-    expect(options).to.deep.equal(expected);
+    expect(options3).to.deep.equal(expected);
   });
 
   it('check wait', async () => {
