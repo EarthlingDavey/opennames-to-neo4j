@@ -14,7 +14,7 @@ const downloadFile = async (url, filePath) => {
       new Promise((resolve, reject) => {
         response.data
           .pipe(fs.createWriteStream(filePath))
-          .on('finish', () => resolve({ response, finish: true }))
+          .on('finish', () => resolve({ response }))
           .on('error', (e) => reject(e));
       })
   );

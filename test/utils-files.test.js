@@ -23,7 +23,6 @@ describe('check util/files functions ', () => {
       return;
     } finally {
       expect(downloaded.response.status).equals(200);
-      expect(downloaded.finish).to.be.true;
     }
 
     // Verify the file can be read and has correct content
