@@ -4,8 +4,10 @@
   "type": "module",
   "scripts": {
     "start:dev": "nodemon --watch src --ext js --exec node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "test:watch": "nodemon --watch src --watch test --exec mocha",
+    "coverage": "c8 npm run test",
+    "coverage:watch": "nodemon --watch src --watch test --exec npm run coverage",
     "build": "babel src --out-dir dist",
     "build:watch": "nodemon --watch src --ext js --exec babel src --out-dir dist"
   },
@@ -16,7 +18,6 @@
     "axios": "^0.21.1",
     "csv-write-stream": "^2.0.0",
     "extract-zip": "^2.0.1",
-    "fast-csv": "^4.3.6",
     "fs-extra": "^9.1.0",
     "md5-file": "^5.0.0",
     "neo4j-driver": "^4.2.3",
@@ -28,6 +29,7 @@
     "@babel/node": "^7.12.10",
     "@babel/plugin-transform-modules-commonjs": "^7.13.8",
     "@babel/preset-env": "^7.13.12",
+    "c8": "^7.7.0",
     "chai": "^4.3.4",
     "cross-env": "^5.1.3",
     "mocha": "^8.3.2",
