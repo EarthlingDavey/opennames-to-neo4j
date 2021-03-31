@@ -10,8 +10,7 @@ import { customFunctions } from './customFunctions.js';
  * Importing without `../` will get the files from the node_modules folder.
  */
 
-// import on2n4j from '../opennames-to-neo4j/src/index.js';
-import { on2n4j } from '../opennames-to-neo4j/dist/index.js';
+import on2n4j from '../opennames-to-neo4j/src/index.js';
 
 /*
  * Create a Neo4j driver instance to connect to the database
@@ -44,19 +43,19 @@ const driver = neo4j.driver(
  * }
  * ```
  */
-// initApi(driver);
+initApi(driver);
 
 const options = {
   /**
    * How many of the OpenName files do you want to process & import?
    * Optional. Leave empty for all files.
    */
-  batchSize: 1,
+  batchSize: 3,
   /**
    * Array of OpenName file names you want to process & import.
    * Optional. Leave empty for all files.
    */
-  // includeFiles: ['TR04.csv'],
+  // includeFiles: ['TR00.csv'],
   /**
    * These custom functions allow for extension of the packages default behaviour.
    * i.e. They can be used to add custom properties to the neo4j imported nodes.
@@ -88,7 +87,7 @@ const options = {
    */
   waits: {
     process: 1,
-    import: 10,
+    import: 1,
     clean: 1,
   },
 };
@@ -127,9 +126,9 @@ const options = {
     if (result) console.log(result);
   } catch (error) {
     console.error(error);
-  }
-
-  if (options.useNgrok) {
-    await ngrok.disconnect();
+  } finally {
+    if (options.useNgrok) {
+      await ngrok.disconnect();
+    }
   }
 })();

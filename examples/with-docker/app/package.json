@@ -9,7 +9,6 @@
   "author": "davey",
   "license": "MIT",
   "dependencies": {
-    "@usedandloved/opennames-to-neo4j": "file:opennames-to-neo4j",
     "apollo-server": "^2.21.2",
     "express": "^4.17.1",
     "neo4j-driver": "^4.2.3",

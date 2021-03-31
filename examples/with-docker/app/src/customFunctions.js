@@ -2,15 +2,7 @@
  * Custom constants
  */
 const allowedTypes = ['populatedPlace', 'other'];
-const allowedLocalTypes = [
-  'Village',
-  'Other Settlement',
-  'Hamlet',
-  'Suburban Area',
-  'Town',
-  'City',
-  'Postcode',
-];
+const allowedLocalTypes = ['Postcode', 'Hamlet'];
 
 /**
  * Example of how to import data,
@@ -58,6 +50,12 @@ const customFunctions = {
       placeImportStatement: placeImportStatement.replace(find, replace),
     };
   },
+  /**
+   * Add your own debugger here.
+   */
+  // debug: (message) => {
+  //   console.debug(message);
+  // },
 };
 
 export { customFunctions };
