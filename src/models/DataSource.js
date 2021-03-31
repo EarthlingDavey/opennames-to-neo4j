@@ -181,7 +181,7 @@ const updateDataSource = async (
 
   const { id, ...properties } = processedDataSource;
 
-  debug(`updateDataSource updating id: ${id}`);
+  // debug(`updateDataSource updating id: ${id}`);
 
   if (!id) {
     throw 'updateDataSource, id missing';

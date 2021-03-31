@@ -170,12 +170,12 @@ const main = async (session, options) => {
   if (toProcess.length) {
     let processedDataSources = [];
 
+    debug(`>>>>>> Start process loop`);
     for (const dataSource of toProcess) {
       /**
        * Does the source csv file is exist?
        * They are stored in /tmp so there is potential for deletion
        */
-      debug(dataSource.filePath);
       if (!(await fs.existsSync(dataSource.filePath))) {
         await fetchDataSources(options, apiVersion);
 
@@ -184,6 +184,7 @@ const main = async (session, options) => {
           return { summary, errors, dataSources: [] };
         }
       }
+      debug(`will process: ${dataSource.id}`);
 
       let processedDataSource;
 
@@ -214,6 +215,7 @@ const main = async (session, options) => {
 
       processedDataSources.push(updatedDataSource);
     }
+    debug(`<<<<<< End process loop`);
 
     if (processedDataSources.length) {
       summary.processed = processedDataSources.length;
@@ -233,6 +235,8 @@ const main = async (session, options) => {
 
   if (toImport.length) {
     let importedDataSources = [];
+
+    debug(`>>>>>> Start import loop`);
     for (const dataSource of toImport) {
       /**
        * Does the processed csv file is exist?
@@ -249,6 +253,8 @@ const main = async (session, options) => {
         continue;
       }
 
+      debug(`will import: ${dataSource.id}`);
+
       const importedDataSource = await importPlaces(
         session,
         dataSource,
@@ -264,6 +270,7 @@ const main = async (session, options) => {
       debug(`import loop, waiting for: ${options.waits.import}s`);
       await waitSeconds(options.waits.import);
     }
+    debug(`<<<<<< End import loop`);
 
     if (importedDataSources.length) {
       summary.imported = importedDataSources.length;
@@ -289,7 +296,10 @@ const main = async (session, options) => {
   if (toCleanUp.length) {
     let cleanedDataSources = [];
 
+    debug(`>>>>>> Start clean up loop`);
     for (const dataSource of toCleanUp) {
+      debug(`will clean up: ${dataSource.id}`);
+
       const deleteSuccess = await deleteFiles([
         dataSource.importFilePath,
         dataSource.filePath,
@@ -317,6 +327,7 @@ const main = async (session, options) => {
       debug(`clean up loop, waiting for: ${options.waits.clean}s`);
       await waitSeconds(options.waits.clean);
     }
+    debug(`<<<<<< End clean up loop`);
 
     if (cleanedDataSources.length) {
       summary.cleaned = cleanedDataSources.length;
