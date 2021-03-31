@@ -12,12 +12,10 @@ import {
 } from '../src/models/Place.js';
 
 import { getFileContents } from '../src/utils/files.js';
-
 import { waitSeconds } from '../src/utils/utils.js';
-
 import { headers202101 as testCsvHeaders } from './constants.js';
 
-describe.only('check place ', () => {
+describe('check place ', () => {
   let driver, session;
 
   before(async function () {
@@ -214,20 +212,83 @@ describe.only('check place ', () => {
     }
   });
 
-  // it('check importPlaces: no session', async () => {
-  //   let actual;
+  //
 
-  //   try {
-  //     actual = await importPlaces(
-  //       undefined,
-  //       dataSource,
-  //       options
-  //     );
-  //   } catch (error) {
-  //     // console.log(error);
-  //     expect(error).to.exist;
-  //   } finally {
-  //     expect(actual).to.be.undefined;
-  //   }
-  // });
+  it('check importPlaces', async () => {
+    if (!session) return;
+    let actual;
+
+    try {
+      actual = await importPlaces(
+        session,
+        {
+          id: '2021-01/TR05.csv',
+          importFileUrl:
+            'https://raw.githubusercontent.com/EarthlingDavey/opennames-to-neo4j/develop/test/assets/to-import-TR00.csv',
+          validRows: 19,
+        },
+        {
+          functions: {
+            debug: () => {
+              return null;
+            },
+          },
+        }
+      );
+    } catch (error) {
+      expect(error).to.be.undefined;
+    } finally {
+      expect(actual.imported).to.be.true;
+      expect(actual.id).to.equal('2021-01/TR05.csv');
+    }
+  });
+
+  it('check importPlaces: url does not exist', async () => {
+    if (!session) return;
+    let actual;
+    try {
+      actual = await importPlaces(session, {
+        id: '2021-01/TR05.csv',
+        importFileUrl: 'https://example.com/does-not-exist.csv',
+        validRows: 19,
+      });
+    } catch (error) {
+      expect(error).to.exist;
+    } finally {
+      expect(actual).to.be.undefined;
+    }
+  });
+
+  it('check importPlaces: undefined url and undefined path', async () => {
+    if (!session) return;
+    let actual;
+    try {
+      actual = await importPlaces(session, {
+        id: '2021-01/TR05.csv',
+        validRows: 19,
+      });
+    } catch (error) {
+      expect(error).to.exist;
+    } finally {
+      expect(actual).to.be.undefined;
+    }
+  });
+
+  it('check importPlaces: no session', async () => {
+    let actual;
+
+    try {
+      actual = await importPlaces(undefined, {
+        id: '2021-01/TR05.csv',
+        importFileUrl:
+          'https://raw.githubusercontent.com/EarthlingDavey/opennames-to-neo4j/develop/test/assets/to-import-TR00.csv',
+        validRows: 19,
+      });
+    } catch (error) {
+      // console.log(error);
+      expect(error).to.exist;
+    } finally {
+      expect(actual).to.be.undefined;
+    }
+  });
 });

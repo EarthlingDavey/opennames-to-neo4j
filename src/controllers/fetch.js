@@ -17,7 +17,12 @@ import { readDataSourceHeaders } from '../models/DataSource.js';
  * @returns {Object}
  */
 const fetchDataSources = async (options, version) => {
-  console.log('>>>>>> Start fetchDataSources', { version });
+  /* debug has unit tests */
+  /* c8 ignore next 1 */
+  const debug = options?.functions?.debug || (() => null);
+
+  debug('>>>>>> Start fetchDataSources', { version });
+  debug(`version: ${version}`);
 
   let zipFilePath, extracted, filesArray, headers;
 
@@ -27,8 +32,11 @@ const fetchDataSources = async (options, version) => {
     throw error;
   }
 
+  debug(`zipFilePath: ${zipFilePath}`);
+
   // const extractTarget = path.resolve('./tmp', version);
   const extractTarget = path.join(os.tmpdir(), 'os', 'OpenNames', version);
+  debug(`extractTarget: ${extractTarget}`);
 
   try {
     extracted = await extractZip(zipFilePath, extractTarget);
@@ -36,8 +44,10 @@ const fetchDataSources = async (options, version) => {
   } catch (error) {
     throw error;
   }
+  debug(`extracted: ${extracted}`);
 
   const dataDir = path.join(extractTarget, 'DATA');
+  debug(`dataDir: ${dataDir}`);
 
   try {
     filesArray = await getCsvFilesArray(dataDir);
@@ -45,11 +55,13 @@ const fetchDataSources = async (options, version) => {
   } catch (error) {
     throw error;
   }
+  debug(`filesArray length: ${filesArray.length}`);
 
   if (options.includeFiles?.length) {
     filesArray = filesArray.filter((fileName) =>
       options.includeFiles.includes(fileName)
     );
+    debug(`filesArray filtered length: ${filesArray.length}`);
   }
 
   try {
@@ -58,9 +70,9 @@ const fetchDataSources = async (options, version) => {
   } catch (error) {
     throw error;
   }
+  debug(`headers length: ${headers.length}`);
 
-  console.log('<<<<<< End fetchDataSources');
-
+  debug('<<<<<< End fetchDataSources');
   return {
     dataDir,
     filesArray,

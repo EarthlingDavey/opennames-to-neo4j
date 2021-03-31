@@ -19,7 +19,17 @@ const getNeo4jSession = (connection) => {
     return { session: driver.session(), shouldCloseSession: true };
   }
 
-  throw 'You must define session,driver or, connection strings';
+  throw 'You must define session, driver or, connection strings';
+};
+
+const toNeo4jInteger = (field) => {
+  const { toNumber, toString, inSafeRange } = neo4j.integer;
+
+  if (neo4j.isInt(field)) {
+    return inSafeRange(field) ? toNumber(field) : toString(field);
+  }
+
+  return field;
 };
 
 const mergeByProperty = (target, source, prop) => {
@@ -65,20 +75,52 @@ function mergeDeep(...objects) {
 const waitSeconds = (amount = 0) =>
   new Promise((resolve) => setTimeout(resolve, amount * 1000));
 
-// Credit neo4j-graphql-js
-const toNeo4jInteger = (field) => {
-  if (neo4j.isInt(field)) {
-    // See: https://neo4j.com/docs/api/javascript-driver/current/class/src/v1/integer.js~Integer.html
-    return field.inSafeRange() ? field.toNumber() : field.toString();
+const styledMessage = (message) => {
+  if (!global?.on2n4j) {
+    global.on2n4j = {
+      debug: { inset: 0 },
+    };
   }
 
-  return field;
+  let prefix = '';
+  let inset = global?.on2n4j?.debug?.inset || 0;
+
+  if (typeof message !== 'string') return { message };
+
+  if (message.startsWith('>>>>>>')) {
+    global.on2n4j.debug.inset += 2;
+    prefix = '\x1b[95m%s\x1b[0m';
+  } else if (message.startsWith('<<<<<<')) {
+    global.on2n4j.debug.inset -= 2;
+    inset = global?.on2n4j.debug.inset;
+    prefix = '\x1b[95m%s\x1b[0m';
+  }
+
+  message = ' '.repeat(inset) + message;
+
+  let parts = message.split(': ');
+
+  if (2 !== parts.length) return { prefix, message };
+
+  prefix = '\x1b[2m%s\x1b[0m';
+  const extra = Math.max(0, 36 - parts[0].length);
+  parts[1] = ' '.repeat(extra) + parts[1];
+
+  return { prefix, message: parts.join(': ') };
+};
+
+const styledDebug = (o) => {
+  const { prefix, message } = styledMessage(o);
+  if (prefix) return console.debug(prefix, message);
+  return console.debug(message);
 };
 
 export {
   getNeo4jSession,
+  toNeo4jInteger,
   mergeByProperty,
   mergeDeep,
   waitSeconds,
-  toNeo4jInteger,
+  styledMessage,
+  styledDebug,
 };

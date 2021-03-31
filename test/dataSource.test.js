@@ -185,6 +185,9 @@ describe('check dataSource ', () => {
     ];
 
     try {
+      await deleteDataSource(session, '2021-01/TR04.csv');
+      await deleteDataSource(session, '2021-01/TR05.csv');
+
       actual = await dbSaveDataSources(session, {
         options: { batchSize: 2 },
         version: '2021-01',

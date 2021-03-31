@@ -16,7 +16,10 @@ import {
 } from '../utils/defaults.js';
 
 async function processPlaces(dataSource, headers, options) {
-  // console.log('>>>>>> Start processPlaces');
+  /* debug has unit tests */
+  /* c8 ignore next 1 */
+  const debug = options?.functions?.debug || (() => null);
+  debug('>>>>>> Start processPlaces');
 
   // console.log({ dataSource, headers, options });
 
@@ -102,7 +105,7 @@ async function processPlaces(dataSource, headers, options) {
             processed: true,
             validRows: validRows,
             importFilePath: importFilePath,
-            importFileUrl: importFileUrl ? importFileUrl : null,
+            importFileUrl: importFileUrl,
           });
           return;
         });
@@ -125,8 +128,13 @@ async function processPlaces(dataSource, headers, options) {
   if (!csvParseResult) {
     throw ('dataSource failed to process', { dataSource });
   }
+  debug(`validRows: ${validRows}`);
+  debug(`processed file importFilePath: ${csvParseResult.importFilePath}`);
 
-  // console.log('<<<<<< End processPlaces');
+  if (csvParseResult.importFileUrl)
+    debug(`processed file importFileUrl: ${csvParseResult.importFileUrl}`);
+
+  debug('<<<<<< End processPlaces');
   return csvParseResult;
 }
 
@@ -182,7 +190,7 @@ let importStatement = `
   // This collect will close the UNWIND 'loop'
   WITH count(p) as count, $dataSourceId AS dataSourceId 
 
-  MATCH (d:DataSource {
+  MERGE (d:DataSource {
     id: dataSourceId
   })
   SET d.imported = true
@@ -200,21 +208,19 @@ let importStatement = `
   `;
 
 async function importPlaces(session, dataSource, options) {
-  console.debug('>>>>>> Start importPlaces');
-  console.debug({
-    validRows: dataSource.validRows,
-  });
+  /* debug has unit tests */
+  /* c8 ignore next 1 */
+  const debug = options?.functions?.debug || (() => null);
+  debug('>>>>>> Start importPlaces');
+  debug(`importing rows: ${dataSource.validRows}`);
 
   let { importFilePath, importFileUrl } = dataSource;
 
-  const from = importFileUrl ? importFileUrl : `file://${importFilePath}`;
+  if (!importFilePath && !importFileUrl) {
+    throw 'importPlaces, missing importFilePath or importFileUrl';
+  }
 
-  // if (options?.functions?.place?.filterImportStatement) {
-  //   statement = await options?.functions?.place?.filterImportStatement(
-  //     statement,
-  //     dataSource
-  //   );
-  // }
+  const from = importFileUrl ? importFileUrl : `file://${importFilePath}`;
 
   importStatement = await filters(
     { placeImportStatement: importStatement },
@@ -222,26 +228,30 @@ async function importPlaces(session, dataSource, options) {
     options
   );
 
+  // console.log(importStatement);
+  // console.log(dataSource.id);
+  // console.log(from);
+
   try {
     const result = await session.run(importStatement, {
       dataSourceId: dataSource.id,
       from,
     });
-    const count = result.records[0]?.get('count');
+    // const count = result.records[0]?.get('count');
 
     const importedDataSource = result.records[0]?.get('importedDataSource');
 
-    if (!importedDataSource) {
-      console.error('dataSource failed to import', { dataSource });
+    // console.log({ importedDataSource });
+    // console.log({ count });
+
+    if (true === importedDataSource?.imported) {
+      debug(`imported ok: ${importedDataSource.fileName}`);
     }
 
-    console.debug('>>>>>> End importPlaces');
-
+    debug('<<<<<< End importPlaces');
     return importedDataSource;
   } catch (error) {
-    console.log(error);
-    console.debug('>>>>>> End importPlaces');
-    return false;
+    throw error;
   }
 }
 

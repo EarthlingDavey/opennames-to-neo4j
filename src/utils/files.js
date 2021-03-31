@@ -107,7 +107,7 @@ const deleteFiles = async (files) => {
     try {
       didDelete = await deleteFile(file);
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       throw error;
     }
   }

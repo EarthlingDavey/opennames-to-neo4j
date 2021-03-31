@@ -45,34 +45,51 @@ import { fetchDataSources } from './controllers/fetch.js';
  * @returns
  */
 
-const sessionWrapper = async (connection = {}, options) => {
+const sessionWrapper = async (connection = {}, options = {}) => {
   /**
    * Apply default function options.
    */
   options = mergeDeep(defaultOptions, options);
+  const debug = options?.functions?.debug || (() => null);
+
+  debug('>>>>>> Start sessionWrapper');
+  // debug('>>>>>> Start sessionWrapper');
+
+  // // console.log(global);
+
+  // return;
 
   /**
    * Start a neo4j db session.
    */
-
-  const { session, shouldCloseSession } = getNeo4jSession(connection);
-
-  const result = await main(session, options);
-
-  /**
-   * Maybe close the neo4j db session.
-   */
-  if (shouldCloseSession) {
-    console.log('closing session');
-    session.close();
+  let session, shouldCloseSession;
+  try {
+    ({ session, shouldCloseSession } = getNeo4jSession(connection));
+  } catch (error) {
+    throw error;
   }
 
+  let result;
+  try {
+    result = await main(session, options);
+  } catch (error) {
+    throw error;
+  } finally {
+    /**
+     * Maybe close the neo4j db session.
+     */
+    if (shouldCloseSession) {
+      session.close();
+    }
+  }
+
+  debug('<<<<<< End sessionWrapper');
   return result;
 };
 
 const main = async (session, options) => {
-  // TODO: Allow for serving of processed csv files.
-  // in-case db is not sharing a volume with the app.
+  const debug = options?.functions?.debug || (() => null);
+  debug('>>>>>> Start main');
 
   let summary = {};
   let errors = [];
@@ -84,7 +101,10 @@ const main = async (session, options) => {
    * Get product version from the API
    */
 
-  const apiVersion = await getOsProductVersion('OpenNames');
+  const apiVersion = await getOsProductVersion('OpenNames').catch((e) => {
+    throw e;
+  });
+  debug(`apiVersion: ${apiVersion}`);
 
   /**
    * Is there db data for this version?
@@ -93,7 +113,11 @@ const main = async (session, options) => {
   let dbResult = await getDbDataSources(session, apiVersion, {
     batchSize: options.batchSize,
     includeFiles: options.includeFiles,
+  }).catch((e) => {
+    throw e;
   });
+
+  debug(`getDbDataSources length: ${dbResult?.dataSources?.length}`);
 
   /**
    * If there is NOT db data for this version.
@@ -101,16 +125,22 @@ const main = async (session, options) => {
    */
   if (!dbResult?.dataSources?.length) {
     const fetchedDataSources = await fetchDataSources(options, apiVersion);
+
     if (fetchedDataSources) {
       dbResult = await dbSaveDataSources(session, {
         options,
         version: apiVersion,
         ...fetchedDataSources,
+      }).catch((e) => {
+        throw e;
       });
       summary.fetched = true;
+      debug(`dbSaveDataSources length: ${dbResult?.dataSources?.length}`);
+      debug(`using fetched DataSources: ${summary.fetched}`);
     }
   } else {
     summary.cached = true;
+    debug(`using cached DataSources: ${summary.cached}`);
   }
 
   if (!dbResult?.dataSources?.length || !dbResult?.headers?.length) {
@@ -121,25 +151,21 @@ const main = async (session, options) => {
 
   let { dataSources } = dbResult;
 
-  if (dataSources.find((x) => !x.cleaned) === undefined) {
-    console.debug(
-      'nothing to do, everything has been processed, imported and cleaned'
-    );
-    summary.complete = true;
-    return { summary, errors, dataSources: [] };
-  }
-
-  /**
-   * Filter the dataSources
-   */
+  // if (dataSources.find((x) => !x.cleaned) === undefined) {
+  //   debug('nothing to do, everything has been processed, imported and cleaned');
+  //   summary.complete = true;
+  //   return { summary, errors, dataSources: [] };
+  // }
 
   /**
    * Process
    */
 
   const toProcess = dataSources.filter(
-    (x) => !x.processed || !x.importFilePath
+    (x) => (!x.processed || !x.importFilePath) && x.filePath
   );
+
+  debug(`dataSources to process: ${toProcess.length}`);
 
   if (toProcess.length) {
     let processedDataSources = [];
@@ -149,8 +175,9 @@ const main = async (session, options) => {
        * Does the source csv file is exist?
        * They are stored in /tmp so there is potential for deletion
        */
+      debug(dataSource.filePath);
       if (!(await fs.existsSync(dataSource.filePath))) {
-        await fetchDataSources(session, options, apiVersion);
+        await fetchDataSources(options, apiVersion);
 
         if (!(await fs.existsSync(dataSource.filePath))) {
           errors.push('no dataSources after running fetchDataSources');
@@ -176,11 +203,12 @@ const main = async (session, options) => {
       const updatedDataSource = await updateDataSource(
         session,
         processedDataSource
-      );
+      ).catch((e) => {
+        throw e;
+      });
 
-      console.log(`process loop, waiting for ${options.waits.process} seconds`);
+      debug(`process loop, waiting for: ${options.waits.process}s`);
       await waitSeconds(options.waits.process);
-      console.log('finished waiting');
 
       if (!updatedDataSource) continue;
 
@@ -201,6 +229,8 @@ const main = async (session, options) => {
     (x) => x.importFilePath && !x.imported && x.validRows > 0
   );
 
+  debug(`dataSources to import: ${toImport.length}`);
+
   if (toImport.length) {
     let importedDataSources = [];
     for (const dataSource of toImport) {
@@ -213,6 +243,8 @@ const main = async (session, options) => {
           ...dataSource,
           processed: null,
           importFilePath: null,
+        }).catch((e) => {
+          throw e;
         });
         continue;
       }
@@ -221,15 +253,16 @@ const main = async (session, options) => {
         session,
         dataSource,
         options
-      );
+      ).catch((e) => {
+        throw e;
+      });
 
       if (importedDataSource) {
         importedDataSources.push(importedDataSource);
       }
 
-      console.log(`import loop, waiting for ${options.waits.import} seconds`);
+      debug(`import loop, waiting for: ${options.waits.import}s`);
       await waitSeconds(options.waits.import);
-      console.log('finished waiting');
     }
 
     if (importedDataSources.length) {
@@ -243,8 +276,15 @@ const main = async (session, options) => {
    */
 
   const toCleanUp = dataSources.filter(
-    (x) => x.processed && (x.imported || 0 === x.validRows) && !x.cleaned
+    (x) =>
+      x.processed &&
+      (x.imported || 0 === x.validRows) &&
+      x.importFilePath &&
+      x.filePath &&
+      !x.cleaned
   );
+
+  debug(`dataSources to clean: ${toCleanUp.length}`);
 
   if (toCleanUp.length) {
     let cleanedDataSources = [];
@@ -253,22 +293,29 @@ const main = async (session, options) => {
       const deleteSuccess = await deleteFiles([
         dataSource.importFilePath,
         dataSource.filePath,
-      ]);
+      ]).catch((e) => {
+        throw e;
+      });
 
       if (!deleteSuccess) continue;
 
-      const updatedDataSource = await updateDataSource(session, {
-        id: dataSource.id,
-        importFilePath: null,
-        filePath: null,
-        cleaned: true,
+      const updatedDataSource = await updateDataSource(
+        session,
+        {
+          id: dataSource.id,
+          importFilePath: null,
+          filePath: null,
+          cleaned: true,
+        },
+        debug
+      ).catch((e) => {
+        throw e;
       });
 
       cleanedDataSources.push(updatedDataSource);
 
-      console.log(`clean up loop, waiting for ${options.waits.clean} seconds`);
+      debug(`clean up loop, waiting for: ${options.waits.clean}s`);
       await waitSeconds(options.waits.clean);
-      console.log('finished waiting');
     }
 
     if (cleanedDataSources.length) {
@@ -277,6 +324,7 @@ const main = async (session, options) => {
     }
   }
 
+  debug('<<<<<< End main');
   return { summary, errors, dataSources };
 };
 

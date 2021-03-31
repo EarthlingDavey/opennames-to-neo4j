@@ -1,3 +1,5 @@
+import { styledDebug } from './utils.js';
+
 const defaultOptions = {
   batchSize: 10,
   neo4jImportDir: '/tmp/import',
@@ -6,7 +8,9 @@ const defaultOptions = {
     import: 1,
     clean: 1,
   },
-  functions: {},
+  functions: {
+    debug: styledDebug,
+  },
 };
 
 const allowedTYPES = ['populatedPlace', 'other'];

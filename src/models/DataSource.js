@@ -91,7 +91,10 @@ const dbSaveDataSources = async (
   session,
   { version, dataDir, filesArray, headers, options }
 ) => {
-  // console.log('>>>>>> Start dbSaveDataSources');
+  /* debug has unit tests */
+  /* c8 ignore next 1 */
+  const debug = options?.functions?.debug || (() => null);
+  debug('>>>>>> Start dbSaveDataSources');
 
   if (!version || !dataDir || !filesArray || !headers) {
     throw 'dbSaveDataSources, properties are missing';
@@ -159,23 +162,26 @@ const dbSaveDataSources = async (
       }
     );
 
-    // console.log('<<<<<< End dbSaveDataSources');
-
+    debug('<<<<<< End dbSaveDataSources');
     return {
       dataSources: result.records[0]?.get('dataSource'),
       headers: result.records[0]?.get('headers'),
     };
   } catch (error) {
-    // console.log(error);
-    // return false;
     throw error;
   }
 };
 
-const updateDataSource = async (session, processedDataSource) => {
-  // console.log('>>>>>> Start updateDataSource');
+const updateDataSource = async (
+  session,
+  processedDataSource,
+  debug = () => {}
+) => {
+  debug('>>>>>> Start updateDataSource');
 
   const { id, ...properties } = processedDataSource;
+
+  debug(`updateDataSource updating id: ${id}`);
 
   if (!id) {
     throw 'updateDataSource, id missing';
@@ -221,9 +227,11 @@ const updateDataSource = async (session, processedDataSource) => {
       );
     }
 
+    debug(`updateDataSource updated id: ${id}`);
+
+    debug('<<<<<< End updateDataSource');
     return updatedDataSource;
   } catch (error) {
-    // console.log(error);
     throw error;
   }
 };

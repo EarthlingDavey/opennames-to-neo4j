@@ -154,7 +154,7 @@ describe('check product ', () => {
     } finally {
       expect(actual).to.be.a('string');
     }
-  }).timeout(60000);
+  }).timeout(120000);
 
   it('check maybeDownloadProduct: with cached file', async () => {
     let actual;

@@ -1,11 +1,15 @@
 import { expect } from 'chai';
 import neo4j from 'neo4j-driver';
+import Integer from 'neo4j-driver/lib/integer.js';
 
 import {
   getNeo4jSession,
+  toNeo4jInteger,
   mergeByProperty,
   mergeDeep,
   waitSeconds,
+  styledMessage,
+  styledDebug,
 } from '../src/utils/utils.js';
 
 describe('check utility functions ', () => {
@@ -60,10 +64,43 @@ describe('check utility functions ', () => {
       actual = getNeo4jSession({ invalid: 'invalid' });
     } catch (error) {
       expect(error).to.equal(
-        'You must define session,driver or, connection strings'
+        'You must define session, driver or, connection strings'
       );
     } finally {
     }
+  });
+
+  it('check toNeo4jInteger', () => {
+    let actual;
+    try {
+      const input = Integer.default.fromString('100000000');
+      actual = toNeo4jInteger(input);
+    } catch (error) {
+      console.log(error);
+    }
+    expect(actual).to.deep.equal(100000000);
+  });
+
+  it('check toNeo4jInteger: unsafe js integer', () => {
+    let actual, input, string;
+    try {
+      input = Integer.default.fromValue('1000000000000000000');
+    } catch (error) {
+      expect(error).to.be.undefined;
+    }
+    try {
+      actual = toNeo4jInteger(input);
+    } catch (error) {
+      expect(error).to.be.undefined;
+    }
+
+    expect(actual).to.equal('1000000000000000000');
+  });
+
+  it('check toNeo4jInteger: invalid', () => {
+    const input = { invalid: 'invalid' };
+    const actual = toNeo4jInteger(input);
+    expect(actual).to.deep.equal(input);
   });
 
   it('check mergeByProperty', () => {
@@ -169,5 +206,51 @@ describe('check utility functions ', () => {
     const duration = new Date().getTime() - start;
 
     expect(duration).to.within(900, 1100);
+  });
+
+  it('check styledMessage', async () => {
+    if (global.on2n4j?.debug?.inset) {
+      global.on2n4j.debug.inset = 0;
+    }
+
+    const original1 = '>>>>>> Start someFunction';
+    const { prefix: prefix1, message: message1 } = styledMessage(original1);
+    expect(message1).to.equal(original1);
+    expect(prefix1).to.exist;
+
+    const original2 = 'test message';
+    const { prefix: prefix2, message: message2 } = styledMessage(original2);
+    expect(message2).to.equal('  ' + original2);
+    expect(prefix2).to.equal('');
+
+    const original3 = 'some value: 10';
+    const { prefix: prefix3, message: message3 } = styledMessage(original3);
+    expect(message3).to.equal('  ' + 'some value:                         10');
+    expect(prefix3).to.exist;
+
+    const originalEnd = '<<<<<< End someFunction';
+    const { prefix: prefixEnd, message: messageEnd } = styledMessage(
+      originalEnd
+    );
+    expect(messageEnd).to.equal(originalEnd);
+    expect(prefixEnd).to.exist;
+  });
+
+  it('check styledMessage: not a string', async () => {
+    const { prefix, message } = styledMessage({ invalid: 'invalid' });
+    expect(message).to.deep.equal({ invalid: 'invalid' });
+    expect(prefix).to.be.undefined;
+  });
+
+  it('check styledDebug', async () => {
+    const actual = styledDebug("      logged for 'check styledDebug': 😎");
+    expect(actual).to.be.undefined;
+  });
+
+  it('check styledDebug: plain string', async () => {
+    const actual = styledDebug(
+      "      logged for 'check styledDebug plain string'"
+    );
+    expect(actual).to.be.undefined;
   });
 });
