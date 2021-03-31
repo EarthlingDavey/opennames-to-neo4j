@@ -65,4 +65,20 @@ function mergeDeep(...objects) {
 const waitSeconds = (amount = 0) =>
   new Promise((resolve) => setTimeout(resolve, amount * 1000));
 
-export { getNeo4jSession, mergeByProperty, mergeDeep, waitSeconds };
+// Credit neo4j-graphql-js
+const toNeo4jInteger = (field) => {
+  if (neo4j.isInt(field)) {
+    // See: https://neo4j.com/docs/api/javascript-driver/current/class/src/v1/integer.js~Integer.html
+    return field.inSafeRange() ? field.toNumber() : field.toString();
+  }
+
+  return field;
+};
+
+export {
+  getNeo4jSession,
+  mergeByProperty,
+  mergeDeep,
+  waitSeconds,
+  toNeo4jInteger,
+};

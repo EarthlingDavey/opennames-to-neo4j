@@ -2,6 +2,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import csv from '@fast-csv/parse';
 
+import { toNeo4jInteger } from '../utils/utils.js';
+
 const readDataSourceHeaders = async (dir) => {
   // console.log('>>>>>> Start readDataSourceHeaders');
   try {
@@ -30,6 +32,10 @@ const getDbDataSources = async (session, version, options) => {
   // console.log({ version, options });
   // console.log(options.includeFiles);
 
+  if (!version) {
+    throw 'getDbDataSources, property(s) is missing';
+  }
+
   const query = `
       MATCH (product:OsProduct {
         id: $productId
@@ -38,7 +44,7 @@ const getDbDataSources = async (session, version, options) => {
       })-[:HAS_FILE]->(d:DataSource)
 
       ${
-        options.includeFiles && options.includeFiles.length
+        options?.includeFiles && options?.includeFiles.length
           ? `WHERE d.fileName IN $options.includeFiles`
           : ``
       }
@@ -60,7 +66,7 @@ const getDbDataSources = async (session, version, options) => {
           validRows: d.validRows,
           version: v.id
         })
-          ${options.batchSize ? `[0..$options.batchSize]` : ``}
+          ${options?.batchSize ? `[0..$options.batchSize]` : ``}
         AS 
           dataSource,
         v.headers AS headers 
@@ -77,8 +83,7 @@ const getDbDataSources = async (session, version, options) => {
       headers: result.records[0]?.get('headers'),
     };
   } catch (error) {
-    console.log(error);
-    return false;
+    throw error;
   }
 };
 
@@ -91,7 +96,6 @@ const dbSaveDataSources = async (
   if (!version || !dataDir || !filesArray || !headers) {
     throw 'dbSaveDataSources, properties are missing';
   }
-  // console.log(options);
 
   // return;
   try {
@@ -176,7 +180,8 @@ const updateDataSource = async (session, processedDataSource) => {
   if (!id) {
     throw 'updateDataSource, id missing';
   }
-  if (!properties) {
+
+  if (!properties || Object.keys(properties).length === 0) {
     throw 'updateDataSource, no properties to update';
   }
 
@@ -223,6 +228,37 @@ const updateDataSource = async (session, processedDataSource) => {
   }
 };
 
+const deleteDataSource = async (session, id) => {
+  // console.log('>>>>>> Start updateDataSource');
+
+  if (!id) {
+    throw 'deleteDataSource, id missing';
+  }
+
+  try {
+    const result = await session.run(
+      `
+      MATCH (d:DataSource {
+        id: $id
+      })
+      DETACH DELETE d
+
+      RETURN count(d) AS count
+      `,
+      {
+        id,
+      }
+    );
+
+    const count = result.records[0]?.get('count');
+
+    return toNeo4jInteger(count);
+  } catch (error) {
+    // console.log(error);
+    throw error;
+  }
+};
+
 // TODO: delete dataSource, then make it the first test
 
 export {
@@ -230,4 +266,5 @@ export {
   getDbDataSources,
   dbSaveDataSources,
   updateDataSource,
+  deleteDataSource,
 };

@@ -1,6 +1,15 @@
 import { expect } from 'chai'; // Using Expect style
 
-import { processPlaces, processRow } from '../src/models/Place.js';
+import {
+  maybeOpenConnection,
+  maybeCloseConnection,
+} from './test-connection.js';
+
+import {
+  processPlaces,
+  processRow,
+  importPlaces,
+} from '../src/models/Place.js';
 
 import { getFileContents } from '../src/utils/files.js';
 
@@ -8,7 +17,19 @@ import { waitSeconds } from '../src/utils/utils.js';
 
 import { headers202101 as testCsvHeaders } from './constants.js';
 
-describe('check place ', () => {
+describe.only('check place ', () => {
+  let driver, session;
+
+  before(async function () {
+    const c = await maybeOpenConnection(driver, session);
+    driver = c.driver;
+    session = c.session;
+  });
+
+  after(async function () {
+    maybeCloseConnection(driver, session);
+  });
+
   it('check processRow', async () => {
     let actual;
     const row = {
@@ -192,4 +213,21 @@ describe('check place ', () => {
       expect(actualDataSource).to.be.undefined;
     }
   });
+
+  // it('check importPlaces: no session', async () => {
+  //   let actual;
+
+  //   try {
+  //     actual = await importPlaces(
+  //       undefined,
+  //       dataSource,
+  //       options
+  //     );
+  //   } catch (error) {
+  //     // console.log(error);
+  //     expect(error).to.exist;
+  //   } finally {
+  //     expect(actual).to.be.undefined;
+  //   }
+  // });
 });
