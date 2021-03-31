@@ -19,13 +19,24 @@ describe('check fetchDataSources ', () => {
     },
     includeFiles: ['TR04.csv'],
   };
-  it('check fetchDataSources', async () => {
-    const apiVersion = await getOsProductVersion('OpenNames');
-    const fetchedDataSources = await fetchDataSources(testOptions, apiVersion);
 
-    expect(fetchedDataSources.dataDir).to.be.a('string');
-    expect(fetchedDataSources.filesArray).to.be.an('array');
-    expect(fetchedDataSources.headers).to.be.an('array');
+  it('check fetchDataSources', async () => {
+    let fetchedDataSources;
+    const apiVersion = await getOsProductVersion('OpenNames');
+    try {
+      fetchedDataSources = await fetchDataSources(testOptions, apiVersion);
+    } catch (error) {
+      // Failing tests on mac. Keep logging for now.
+      // console.log(error);
+      expect(error).to.be.undefined;
+      return;
+    } finally {
+      // Failing tests on mac. Keep logging for now.
+      // console.log(fetchedDataSources);
+      expect(fetchedDataSources?.dataDir).to.be.a('string');
+      expect(fetchedDataSources?.filesArray).to.be.an('array');
+      expect(fetchedDataSources?.headers).to.be.an('array');
+    }
   }).timeout(120000);
 
   it('check fetchDataSources: invalid version', async () => {

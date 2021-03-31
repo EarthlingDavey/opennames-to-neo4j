@@ -1,4 +1,5 @@
 import { expect } from 'chai'; // Using Expect style
+import path from 'path';
 
 import {
   maybeOpenConnection,
@@ -110,8 +111,10 @@ describe('check place ', () => {
       cleaned: null,
       id: '2021-01/TR00.csv',
       version: '2021-01',
-      importFilePath:
-        '/home/node/app/tmp/for-test/process-places/os/OpenNames/2021-01/TR00.csv',
+      importFilePath: path.resolve(
+        './tmp/for-test/process-places',
+        'os/OpenNames/2021-01/TR00.csv'
+      ),
     };
 
     try {

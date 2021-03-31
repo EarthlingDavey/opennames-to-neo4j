@@ -1,12 +1,17 @@
 import dotenv from 'dotenv';
+import fs from 'fs-extra';
 import neo4j from 'neo4j-driver';
 import path from 'path';
 
 const maybeOpenConnection = async (session, driver) => {
-  const result = dotenv.config({
-    path: path.resolve('./test', '.env'),
-  });
+  const envFilePath = path.resolve('./test', '.env');
+
+  if (!fs.existsSync(envFilePath)) return { session, driver };
+
   try {
+    const result = dotenv.config({
+      path: envFilePath,
+    });
     if (result.error) {
       throw result.error;
     }
@@ -19,10 +24,7 @@ const maybeOpenConnection = async (session, driver) => {
     // console.log('starting session');
   } catch (error) {
     session = undefined;
-    console.log(error);
-    console.log(
-      '! Tests will be incomplete. Because database connected was not available.'
-    );
+    // console.log(error);
   }
   return { session, driver };
 };
@@ -32,7 +34,7 @@ const maybeCloseConnection = async (session, driver) => {
     await session.close();
   } else {
     console.log(
-      '! Tests will be incomplete. Because database connected was not available.'
+      '! Tests will be incomplete. Because database connection was not available.'
     );
   }
   if (driver) {
