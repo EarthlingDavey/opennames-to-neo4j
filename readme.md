@@ -1,5 +1,5 @@
 Warning - this is an early release. Exercise caution 😅  
-And, please feedback at neo4j Slack [#neo4j-javascript](https://neo4j-users-slack-invite.herokuapp.com/) or via GitHub [issues tab](https://github.com/EarthlingDavey/opennames-to-neo4j/issues).
+And, please feedback at [the Neo4j discord server](https://discord.gg/neo4j) in #app-dev or via GitHub [issues tab](https://github.com/EarthlingDavey/opennames-to-neo4j/issues).
 
 ## Background
 
@@ -183,7 +183,52 @@ const options = {
 
 ### Extending functionality
 
+---
+
 ## Examples
+
+### Minimal
+
+- Minimal configuration
+- Uses remote neo4j database
+- Only needs neo4j credentials, to start populating the database with OpenName places
+- Starts an express server to host .csv files
+- Uses ngrok tunnel to allow database to access files
+
+To start the minimal example
+
+- Copy `.env.sample` to `.env` and complete with your login credentials.
+
+  A [neo4j sandbox](https://neo4j.com/sandbox/) database is good for local development.
+
+- Next run `npm i` and `npm run dev:start`.
+
+The example project, and package source files are being watched.
+
+Check the console messages for errors or debug info.
+
+#### Run minimal example in Docker
+
+Known issue: Permission errors on macOS host on `.zip` extracted `.csv` files.
+
+Workaround: run in a linux docker container.
+
+- Install docker and docker-compose
+
+- From `examples/minimal` run `docker-compose up`
+
+### With Docker Neo4j
+
+- Uses a local neo4j database
+- Database shares a storage volume with the example app
+- Uses custom functions to extend default functionality, adds 'County' property to Place nodes
+- A GraphQL server is started, so that you can explore imported Open Name places
+
+To start this project
+
+- Copy `.env.sample` to `.env` and complete with your login credentials.
+
+- Run `docker-compose up`
 
 ---
 
@@ -191,24 +236,42 @@ const options = {
 
 ### Writing code
 
-
+To write code for the package, it is probably easiest to use `example/minimal`, or make a copy of it.
 
 ### Testing
 
-To test, go to `/test`. Copy `.env.sample` to `.env` and complete with your login credentials.
+To test, go to `/test`.
 
-A [neo4j sandbox](https://neo4j.com/sandbox/) database is good for testing.
+- Copy `.env.sample` to `.env` and complete with your login credentials.
 
-Next run `npm i` and `npm run coverage` to run all rests and show a coverage report.
+  A [neo4j sandbox](https://neo4j.com/sandbox/) database is good for testing.
+
+- Next run `npm i` and `npm run coverage` to run all rests and show a coverage report.
+
+#### Testing in Docker
 
 Known issue: Permission errors on macOS host on `.zip` extracted `.csv` files.
 
 Workaround: run in a linux docker container.
 
-Install docker and docker-compose
+- Install docker and docker-compose
 
-Run `docker-compose up -d` 
+- Run `docker-compose up -d`
 
-You can now ues the earlier mentioned `npm` commands, just with a `docker-compose exec dev` prefix.
+- You can now ues the earlier mentioned `npm` commands, just with a `docker-compose exec dev` prefix.
 
-Like: `docker-compose exec dev npm i` & `docker-compose exec dev npm run coverage`
+  Like: `docker-compose exec dev npm i` & `docker-compose exec dev npm run coverage`
+
+---
+
+### Pull requests
+
+Please let me know if you intend to work and create a pull request on this repository.
+
+Otherwise, please understand, I will only merge pull requests at my discretion.
+
+### Issues
+
+Tag me (@davey) in [the Neo4j discord server!](https://discord.gg/neo4j) in #app-dev
+
+Or, create an issue via GitHub [issues tab](https://github.com/EarthlingDavey/opennames-to-neo4j/issues).
