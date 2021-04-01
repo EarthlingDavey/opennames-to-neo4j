@@ -11,13 +11,6 @@ const allowedLocalTypes = ['Postcode', 'Hamlet'];
  */
 const customFunctions = {
   /**
-   * Add to the dist (processed) csv file header
-   */
-  distCsvHeadersFilter: async ({ distCsvHeaders }) => {
-    await distCsvHeaders.push('county');
-    return { distCsvHeaders };
-  },
-  /**
    * Check if the row is valid.
    * By default only postcodes are valid.
    */
@@ -28,6 +21,15 @@ const customFunctions = {
         allowedLocalTypes.includes(data['LOCAL_TYPE']),
     };
   },
+
+  /**
+   * Add to the dist (processed) csv file header
+   */
+  distCsvHeadersFilter: async ({ distCsvHeaders }) => {
+    await distCsvHeaders.push('county');
+    return { distCsvHeaders };
+  },
+
   /**
    * If county is on the row, then set it to the
    * processedRow object
@@ -37,6 +39,7 @@ const customFunctions = {
 
     return { processedRow };
   },
+
   /**
    * Add the the cypher import statement
    */
@@ -50,6 +53,7 @@ const customFunctions = {
       placeImportStatement: placeImportStatement.replace(find, replace),
     };
   },
+
   /**
    * Add your own debugger here.
    */

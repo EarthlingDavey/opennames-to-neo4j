@@ -69,7 +69,7 @@ Created with [arrows.app](https://arrows.app). Source at [opennames-to-neo4j-mod
 ## Requirements
 
 1. Have at least 2GB available disk space.
-1. Be able to write to the /tmp directory and
+1. Be able to write to the a directory.
 1. Have a neo4j database.  
    So that it may read csv files for importing, it should:
 
@@ -176,12 +176,65 @@ const options = {
     import: 1,
     clean: 1,
   },
+
+  /**
+   * Add your own debugger here.
+   */
+  // debug: (message) => {
+  //   console.debug(message);
+  // },
 };
 ```
 
-### Default behaviour
+## Default behaviour
 
-### Extending functionality
+The default behaviour of this package is to
+
+- Import places of type Postcode from the OpenNames .csv
+- Log all debug messages to the terminal
+
+## Extending functionality
+
+### Extend with Filters
+
+To extend the some functions of the package, filters are used.
+These are somewhat like how WordPress uses filters.
+
+> They provide a way for functions to modify data of other functions.
+
+Take a look at [examples/with-docker-neo4j/app/src/customFunctions.js](examples/with-docker-neo4j/app/src/customFunctions.js) an example of how the filter functions are defined.
+
+The example filters are commented, in essence it allows for
+
+1. Custom validation on each row of the OpenNames source .csv files.
+
+   e.g. process and import places with type Hamlet to your database
+
+1. Add custom properties (with optional transform) to Place nodes.
+
+   1. `distCsvHeadersFilter` to add header rows to your processed .csv files.
+   1. `processedRowFilter` to read the source row, and add a property to the processed row.
+   1. `placeImportStatementFilter` to edit the cypher query for .csv import.
+
+The filters might look complex, but, I hope they are a good balance between complexity & functionality. And enable this plugin to be flexible enough for a variety of use cases.
+
+For reference, to find where the filters are called, do a find for `filters(` in `./src` directory.
+
+### Extend with Functions
+
+By default there is a debug function that logs all messages to the terminal.
+
+If you have a custom logging solution or, would prefer to silence the debug messages,
+then pass function as a debug property of the `options.functions`.
+
+```js
+const options = {
+  functions: {
+    debug: logger,
+    // debug: () => null,
+  },
+};
+```
 
 ---
 
