@@ -1,4 +1,6 @@
 import neo4j from 'neo4j-driver';
+import util from 'util';
+import chalk from 'chalk';
 
 const getNeo4jSession = (connection) => {
   if (connection.session) {
@@ -82,37 +84,51 @@ const styledMessage = (message) => {
     };
   }
 
-  let prefix = '';
   let inset = global?.on2n4j?.debug?.inset || 0;
 
-  if (typeof message !== 'string') return { message };
+  if (typeof message !== 'string') {
+    const a = util.inspect(message, {
+      showHidden: false,
+      depth: 10,
+    });
+    let newMessage = '';
+    a.split('\n').forEach(function (line, index, arr) {
+      if (index === arr.length - 1 && line === '') {
+        return;
+      }
+      newMessage += index ? '\n' : '';
+      newMessage += ' '.repeat(inset) + line;
+    });
+    return chalk.gray(newMessage);
+  }
 
+  let color = 'gray';
   if (message.startsWith('>>>>>>')) {
     global.on2n4j.debug.inset += 2;
-    prefix = '\x1b[95m%s\x1b[0m';
+    color = 'cyanBright';
   } else if (message.startsWith('<<<<<<')) {
     global.on2n4j.debug.inset -= 2;
     inset = global?.on2n4j.debug.inset;
-    prefix = '\x1b[95m%s\x1b[0m';
+    color = 'cyanBright';
   }
 
   message = ' '.repeat(inset) + message;
 
   let parts = message.split(': ');
 
-  if (2 !== parts.length) return { prefix, message };
+  if (2 !== parts.length) return chalk[color](message);
 
-  prefix = '\x1b[2m%s\x1b[0m';
   const extra = Math.max(0, 36 - parts[0].length);
   parts[1] = ' '.repeat(extra) + parts[1];
 
-  return { prefix, message: parts.join(': ') };
+  return chalk.gray(parts.join(': '));
 };
 
-const styledDebug = (o) => {
-  const { prefix, message } = styledMessage(o);
-  if (prefix) return console.debug(prefix, message);
-  return console.debug(message);
+const styledDebug = (...args) => {
+  args.forEach(function (arg) {
+    const styled = styledMessage(arg);
+    console.debug(styled);
+  });
 };
 
 export {

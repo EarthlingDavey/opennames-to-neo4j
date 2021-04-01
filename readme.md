@@ -184,3 +184,31 @@ const options = {
 ### Extending functionality
 
 ## Examples
+
+---
+
+## Package development
+
+### Writing code
+
+
+
+### Testing
+
+To test, go to `/test`. Copy `.env.sample` to `.env` and complete with your login credentials.
+
+A [neo4j sandbox](https://neo4j.com/sandbox/) database is good for testing.
+
+Next run `npm i` and `npm run coverage` to run all rests and show a coverage report.
+
+Known issue: Permission errors on macOS host on `.zip` extracted `.csv` files.
+
+Workaround: run in a linux docker container.
+
+Install docker and docker-compose
+
+Run `docker-compose up -d` 
+
+You can now ues the earlier mentioned `npm` commands, just with a `docker-compose exec dev` prefix.
+
+Like: `docker-compose exec dev npm i` & `docker-compose exec dev npm run coverage`
