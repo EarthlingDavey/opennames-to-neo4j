@@ -1,5 +1,5 @@
 .env
-docker/neo4j/logs
+docker/neo4j/logs/**/*.log
 **/node_modules/*
 dist
 **/tmp/*
