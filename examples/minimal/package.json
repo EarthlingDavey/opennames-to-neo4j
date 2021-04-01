@@ -4,7 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "start:dev": "nodemon --watch src --watch opennames-to-neo4j --ext js --exec node  src/index.js"
+    "start:dev": "nodemon --watch src --watch ../../src --ext js --exec node  src/index.js"
   },
   "author": "davey",
   "license": "MIT",

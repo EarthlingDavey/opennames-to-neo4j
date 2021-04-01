@@ -38,14 +38,14 @@ const options = {
    * Array of OpenName file names you want to process & import.
    * Optional. Leave empty for all files.
    */
-  // includeFiles: ['TR00.csv'],
+  includeFiles: ['TR06.csv'],
   /**
    * In case this app is running locally, and your database is remote.
    * e.g. https://sandbox.neo4j.com/
    * Then set neo4jImportDir to '/app/public' & useNgrok to true.
    * ngrok will create a tunnel so neo4j can reach this local app's server.
    */
-  neo4jImportDir: '/app/public',
+  neo4jImportDir: './public',
 };
 
 (async function () {

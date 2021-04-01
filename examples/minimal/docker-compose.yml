@@ -4,7 +4,7 @@ services:
   app:
     hostname: opennames-app
     image: 'node:14.16.0-alpine3.13'
-    working_dir: /app
+    working_dir: /opennames-to-neo4j/examples/minimal
     ports:
       - 3000:3000/tcp
     env_file:
@@ -13,11 +13,10 @@ services:
       # For color formatted debug messages
       - FORCE_COLOR=1
     volumes:
-      - .:/app
-      - ../..:/app/opennames-to-neo4j
-      - opennames_minimal_node_modules:/app/node_modules
-      - opennames_minimal_src_node_modules:/app/opennames-to-neo4j/node_modules
-    command: ash -c "cd /app/opennames-to-neo4j && npm i && cd /app && npm i && npm run start:dev"
+      - ../..:/opennames-to-neo4j
+      - opennames_minimal_node_modules:/opennames-to-neo4j/examples/minimal/node_modules
+      - opennames_minimal_src_node_modules:/opennames-to-neo4j/node_modules
+    command: ash -c "cd /opennames-to-neo4j && npm i && cd /opennames-to-neo4j/examples/minimal && npm i && npm run start:dev"
 
 volumes:
   opennames_minimal_node_modules:

@@ -21,7 +21,7 @@ const fetchDataSources = async (options, version) => {
   /* c8 ignore next 1 */
   const debug = options?.functions?.debug || (() => null);
 
-  debug('>>>>>> Start fetchDataSources', { version });
+  debug('>>>>>> Start fetchDataSources');
   debug(`version: ${version}`);
 
   let zipFilePath, extracted, filesArray, headers;
@@ -56,13 +56,6 @@ const fetchDataSources = async (options, version) => {
     throw error;
   }
   debug(`filesArray length: ${filesArray.length}`);
-
-  if (options.includeFiles?.length) {
-    filesArray = filesArray.filter((fileName) =>
-      options.includeFiles.includes(fileName)
-    );
-    debug(`filesArray filtered length: ${filesArray.length}`);
-  }
 
   try {
     headers = await readDataSourceHeaders(extractTarget);

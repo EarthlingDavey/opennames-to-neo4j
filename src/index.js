@@ -53,7 +53,6 @@ const sessionWrapper = async (connection = {}, options = {}) => {
   const debug = options?.functions?.debug || (() => null);
 
   debug('>>>>>> Start sessionWrapper');
-  // debug('>>>>>> Start sessionWrapper');
 
   // // console.log(global);
 
@@ -151,11 +150,21 @@ const main = async (session, options) => {
 
   let { dataSources } = dbResult;
 
-  // if (dataSources.find((x) => !x.cleaned) === undefined) {
-  //   debug('nothing to do, everything has been processed, imported and cleaned');
-  //   summary.complete = true;
-  //   return { summary, errors, dataSources: [] };
-  // }
+  /**
+   * Filter
+   */
+  if (options.includeFiles?.length) {
+    dataSources = dataSources.filter(({ fileName }) =>
+      options.includeFiles.includes(fileName)
+    );
+    debug(`dataSources filtered length: ${dataSources.length}`);
+  }
+
+  if (dataSources.find((x) => !x.cleaned) === undefined) {
+    debug('nothing to do, everything has been processed, imported and cleaned');
+    summary.complete = true;
+    return { summary, errors, dataSources: [] };
+  }
 
   /**
    * Process
