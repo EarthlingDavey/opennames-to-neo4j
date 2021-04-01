@@ -1,5 +1,5 @@
 import express from 'express';
-import { styledDebug as debug } from '../opennames-to-neo4j/src/utils/utils.js';
+import { styledDebug as debug } from '../../../src/utils/utils.js';
 
 const app = express();
 const port = 3000;

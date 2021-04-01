@@ -2,8 +2,8 @@ import ngrok from 'ngrok';
 import { getCredentials } from './credentials.js';
 import { initFileServer, closeFileServer } from './fileServer.js';
 // Import with relative path for local development.
-import on2n4j from '../opennames-to-neo4j/src/index.js';
-import { styledDebug as debug } from '../opennames-to-neo4j/src/utils/utils.js';
+import on2n4j from '../../../src/index.js';
+import { styledDebug as debug } from '../../../src/utils/utils.js';
 
 let server;
 
@@ -38,7 +38,7 @@ const options = {
    * Array of OpenName file names you want to process & import.
    * Optional. Leave empty for all files.
    */
-  includeFiles: ['TR00.csv'],
+  // includeFiles: ['TR00.csv'],
   /**
    * In case this app is running locally, and your database is remote.
    * e.g. https://sandbox.neo4j.com/
