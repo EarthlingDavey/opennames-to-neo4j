@@ -86,7 +86,7 @@ Instal with
 
 Import at the start of your .js file.
 
-`import { on2n4j } from 'opennames-to-neo4j';`
+`import on2n4j from 'opennames-to-neo4j';`
 
 To establish a database connection, pass **one** of the following: credentials, driver **or** session to the function.
 
