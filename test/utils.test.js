@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import neo4j from 'neo4j-driver';
 import Integer from 'neo4j-driver/lib/integer.js';
+import util from 'util';
 
 import {
   getNeo4jSession,
@@ -214,32 +215,29 @@ describe('check utility functions ', () => {
     }
 
     const original1 = '>>>>>> Start someFunction';
-    const { prefix: prefix1, message: message1 } = styledMessage(original1);
-    expect(message1).to.equal(original1);
-    expect(prefix1).to.exist;
+    const styled1 = styledMessage(original1);
+    expect(styled1).to.have.string(original1);
 
     const original2 = 'test message';
-    const { prefix: prefix2, message: message2 } = styledMessage(original2);
-    expect(message2).to.equal('  ' + original2);
-    expect(prefix2).to.equal('');
+    const styled2 = styledMessage(original2);
+    expect(styled2).to.have.string('  ' + original2);
 
     const original3 = 'some value: 10';
-    const { prefix: prefix3, message: message3 } = styledMessage(original3);
-    expect(message3).to.equal('  ' + 'some value:                         10');
-    expect(prefix3).to.exist;
-
-    const originalEnd = '<<<<<< End someFunction';
-    const { prefix: prefixEnd, message: messageEnd } = styledMessage(
-      originalEnd
+    const styled3 = styledMessage(original3);
+    expect(styled3).to.have.string(
+      '  ' + 'some value:                         10'
     );
-    expect(messageEnd).to.equal(originalEnd);
-    expect(prefixEnd).to.exist;
+
+    const original4 = '<<<<<< End someFunction';
+    const styled4 = styledMessage(original4);
+    expect(styled4).to.have.string(original4);
   });
 
   it('check styledMessage: not a string', async () => {
-    const { prefix, message } = styledMessage({ invalid: 'invalid' });
-    expect(message).to.deep.equal({ invalid: 'invalid' });
-    expect(prefix).to.be.undefined;
+    const message = styledMessage({ invalid: 'invalid' });
+    expect(message).to.have.string(
+      "\u001b[90m{ invalid: 'invalid' }\u001b[39m"
+    );
   });
 
   it('check styledDebug', async () => {

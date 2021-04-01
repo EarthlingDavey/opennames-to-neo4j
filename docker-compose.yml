@@ -11,9 +11,7 @@ services:
     volumes:
       - .:/home/node/app
       - on2n4j_dev_node_modules:/home/node/app/node_modules
-      - on2n4j_dev_yarn_cache:/home/node/app/.yarn/cache
     command: 'npm run start:dev'
 
 volumes:
   on2n4j_dev_node_modules:
-  on2n4j_dev_yarn_cache:
