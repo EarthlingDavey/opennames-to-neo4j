@@ -1,0 +1,23 @@
+{
+  "name": "opennames-to-neo4j-minimal",
+  "version": "0.0.1",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "start:dev": "nodemon --watch src --watch ../../src --ext js --exec node  src/index.js"
+  },
+  "author": "davey",
+  "license": "MIT",
+  "dependencies": {
+    "bull": "^3.22.0",
+    "bull-board": "^1.5.1",
+    "express": "^4.17.1",
+    "neo4j-driver": "^4.2.3",
+    "ngrok": "^3.4.1"
+  },
+  "devDependencies": {
+    "@types/bull": "^3.15.0",
+    "dotenv": "^8.2.0",
+    "nodemon": "^1.19.1"
+  }
+}

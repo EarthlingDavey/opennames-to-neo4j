@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  app:
+    hostname: opennames-app
+    image: 'node:14.16.0-alpine3.13'
+    working_dir: /opennames-to-neo4j/examples/microservice
+    ports:
+      - 3000:3000/tcp
+    env_file:
+      - ./.env
+    environment:
+      # For color formatted debug messages
+      - FORCE_COLOR=1
+    volumes:
+      - ../..:/opennames-to-neo4j
+      - opennames_microservice_node_modules:/opennames-to-neo4j/examples/microservice/node_modules
+      - opennames_microservice_src_node_modules:/opennames-to-neo4j/node_modules
+    command: ash -c "cd /opennames-to-neo4j && npm i && cd /opennames-to-neo4j/examples/microservice && npm i && npm run start:dev"
+
+  neo4j:
+    image: neo4j:4.2.3
+    hostname: opennames-neo4j
+    ports:
+      - 7687:7687/tcp
+    environment:
+      - NEO4J_AUTH=neo4j/pass
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4JLABS_PLUGINS=["apoc"]
+      # Raise memory limits
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms.memory.heap.initial_size=1G
+      - NEO4J_dbms_memory_heap_max__size=1G
+      - NEO4J_dbms_directories_logs=/var/lib/neo4j/logs
+    volumes:
+      - ./neo4j/logs:/var/lib/neo4j/logs
+      - neo4j_plugins:/var/lib/neo4j/plugins
+      - neo4j_data:/var/lib/neo4j/data
+    tty: true
+    stdin_open: true
+
+  redis:
+    image: redis:alpine3.13
+
+volumes:
+  opennames_microservice_node_modules:
+  opennames_microservice_src_node_modules:
+  neo4j_data:
+  neo4j_plugins:
