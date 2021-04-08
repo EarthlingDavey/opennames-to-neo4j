@@ -94,6 +94,8 @@ const main = async (session, options) => {
   let errors = [];
 
   // console.log(options);
+  // console.log(options.actions.includes('fetch'));
+  // console.log(options.actions.includes('process'));
   // return;
 
   /**
@@ -160,19 +162,17 @@ const main = async (session, options) => {
     debug(`dataSources filtered length: ${dataSources.length}`);
   }
 
-  if (dataSources.find((x) => !x.cleaned) === undefined) {
-    debug('nothing to do, everything has been processed, imported and cleaned');
-    summary.complete = true;
-    return { summary, errors, dataSources: [] };
-  }
+  if (options?.functions?.updateProgress) options.functions.updateProgress(10);
 
   /**
    * Process
    */
 
-  const toProcess = dataSources.filter(
-    (x) => (!x.processed || !x.importFilePath) && x.filePath
-  );
+  const toProcess = options.actions.includes('process')
+    ? dataSources.filter(
+        (x) => (!x.processed || !x.importFilePath) && x.filePath
+      )
+    : [];
 
   debug(`dataSources to process: ${toProcess.length}`);
 
@@ -232,13 +232,17 @@ const main = async (session, options) => {
     }
   }
 
+  if (options?.functions?.updateProgress) options.functions.updateProgress(33);
+
   /**
    * Import
    */
 
-  const toImport = dataSources.filter(
-    (x) => x.importFilePath && !x.imported && x.validRows > 0
-  );
+  const toImport = options.actions.includes('import')
+    ? dataSources.filter(
+        (x) => x.importFilePath && !x.imported && x.validRows > 0
+      )
+    : [];
 
   debug(`dataSources to import: ${toImport.length}`);
 
@@ -287,18 +291,22 @@ const main = async (session, options) => {
     }
   }
 
+  if (options?.functions?.updateProgress) options.functions.updateProgress(66);
+
   /**
    * Clean up
    */
 
-  const toCleanUp = dataSources.filter(
-    (x) =>
-      x.processed &&
-      (x.imported || 0 === x.validRows) &&
-      x.importFilePath &&
-      x.filePath &&
-      !x.cleaned
-  );
+  const toCleanUp = options.actions.includes('cleanUp')
+    ? dataSources.filter(
+        (x) =>
+          x.processed &&
+          (x.imported || 0 === x.validRows) &&
+          x.importFilePath &&
+          x.filePath &&
+          !x.cleaned
+      )
+    : [];
 
   debug(`dataSources to clean: ${toCleanUp.length}`);
 
@@ -343,6 +351,8 @@ const main = async (session, options) => {
       mergeByProperty(dataSources, cleanedDataSources, 'id');
     }
   }
+
+  if (options?.functions?.updateProgress) options.functions.updateProgress(100);
 
   debug('<<<<<< End main');
   return { summary, errors, dataSources };
