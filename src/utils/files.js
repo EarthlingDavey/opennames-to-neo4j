@@ -2,6 +2,7 @@ import axios from 'axios';
 import fs from 'fs-extra';
 import extract from 'extract-zip';
 import path from 'path';
+import chmodr from 'chmodr';
 
 const downloadFile = async (url, filePath) => {
   await fs.ensureDir(path.dirname(filePath));
@@ -37,6 +38,7 @@ const extractZip = async (zipFilePath, extractTarget) => {
   extractTarget = path.resolve(extractTarget);
 
   await fs.ensureDir(extractTarget);
+
   try {
     await extract(zipFilePath, { dir: extractTarget });
   } catch (e) {
@@ -44,6 +46,13 @@ const extractZip = async (zipFilePath, extractTarget) => {
     throw e;
   }
   // console.debug('Extraction complete');
+
+  chmodr(extractTarget, 0o400, (e) => {
+    if (e) {
+      throw e;
+    }
+  });
+
   return true;
 };
 
