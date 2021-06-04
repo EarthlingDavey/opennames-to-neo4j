@@ -47,7 +47,7 @@ const extractZip = async (zipFilePath, extractTarget) => {
   }
   // console.debug('Extraction complete');
 
-  chmodr(extractTarget, 0o400, (e) => {
+  chmodr(extractTarget, 0o444, (e) => {
     if (e) {
       throw e;
     }
