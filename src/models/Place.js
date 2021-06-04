@@ -49,6 +49,8 @@ async function processPlaces(dataSource, headers, options) {
 
   await fs.ensureFile(importFilePath);
 
+  debug('ensureFile');
+
   writer.pipe(fs.createWriteStream(importFilePath));
 
   let csvParseResultPromise,
