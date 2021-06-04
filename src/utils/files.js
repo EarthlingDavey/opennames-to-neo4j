@@ -47,13 +47,24 @@ const extractZip = async (zipFilePath, extractTarget) => {
   }
   // console.debug('Extraction complete');
 
-  chmodr(extractTarget, 0o644, (e) => {
-    if (e) {
-      throw e;
-    }
-  });
+  try {
+    await setChmodr();
+  } catch (e) {
+    throw e;
+  }
 
   return true;
+};
+
+const setChmodr = () => {
+  return new Promise((resolve, reject) => {
+    chmodr(extractTarget, 0o644, (e) => {
+      if (e) {
+        reject(e);
+      }
+      resolve();
+    });
+  });
 };
 
 const getFileContents = async (filePath) => {
