@@ -171,7 +171,7 @@ async function processRow(row) {
   return newPlace;
 }
 
-let importStatement = `
+const importStatement = `
  
   USING PERIODIC COMMIT 500
   
@@ -188,6 +188,8 @@ let importStatement = `
   p.type             = place.type,
   p.location         = point({latitude: tofloat(place.lat), longitude: tofloat(place.lng), crs: 'WGS-84'}),
   p.updatedAt        = TIMESTAMP()
+
+  // AFTER SET PLACE
   
   // This collect will close the UNWIND 'loop'
   WITH count(p) as count, $dataSourceId AS dataSourceId 
@@ -224,18 +226,21 @@ async function importPlaces(session, dataSource, options) {
 
   const from = importFileUrl ? importFileUrl : `file://${importFilePath}`;
 
-  importStatement = await filters(
+  const importStatementFiltered = await filters(
     { placeImportStatement: importStatement },
     'placeImportStatement',
     options
   );
+
+  // debug(`importStatement: ${importStatementFiltered}`);
+  debug(`dataSource.id: ${dataSource.id}`);
 
   // console.log(importStatement);
   // console.log(dataSource.id);
   // console.log(from);
 
   try {
-    const result = await session.run(importStatement, {
+    const result = await session.run(importStatementFiltered, {
       dataSourceId: dataSource.id,
       from,
     });
