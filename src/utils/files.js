@@ -102,7 +102,7 @@ const deleteFile = async (file) => {
 
   try {
     const fileExists = await fs.existsSync(file);
-    if (!fileExists) throw "File doesn't exist.";
+    if (!fileExists) return true;
     await fs.unlink(file);
   } catch (error) {
     // console.error(error);
