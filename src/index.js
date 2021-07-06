@@ -150,6 +150,8 @@ const main = async (session, options) => {
 
   let { dataSources } = dbResult;
 
+  console.log(dataSources);
+
   /**
    * Filter
    */
@@ -252,6 +254,8 @@ const main = async (session, options) => {
        * They are stored in /tmp so there is potential for deletion
        */
       if (!(await fs.existsSync(dataSource.importFilePath))) {
+        debug(`import loop file not exist`);
+
         await updateDataSource(session, {
           ...dataSource,
           processed: null,
@@ -272,6 +276,8 @@ const main = async (session, options) => {
         throw e;
       });
 
+      debug({ importedDataSource });
+
       if (importedDataSource) {
         importedDataSources.push(importedDataSource);
       }
@@ -282,6 +288,7 @@ const main = async (session, options) => {
     debug(`<<<<<< End import loop`);
 
     if (importedDataSources.length) {
+      debug(`merging importedDataSources`);
       summary.imported = importedDataSources.length;
       mergeByProperty(dataSources, importedDataSources, 'id');
     }
@@ -290,6 +297,8 @@ const main = async (session, options) => {
   /**
    * Clean up
    */
+
+  debug({ dataSources });
 
   const toCleanUp = dataSources.filter(
     (x) =>

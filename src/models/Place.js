@@ -232,6 +232,8 @@ async function importPlaces(session, dataSource, options) {
     options
   );
 
+  console.log(importStatementFiltered);
+
   // debug(`importStatement: ${importStatementFiltered}`);
   debug(`dataSource.id: ${dataSource.id}`);
 
@@ -244,6 +246,8 @@ async function importPlaces(session, dataSource, options) {
       dataSourceId: dataSource.id,
       from,
     });
+
+    debug(result);
     // const count = result.records[0]?.get('count');
 
     const importedDataSource = result.records[0]?.get('importedDataSource');
