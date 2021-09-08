@@ -4,7 +4,11 @@ import os from 'os';
 
 import { maybeDownloadProduct } from '../models/Product.js';
 
-import { extractZip, getCsvFilesArray } from '../utils/files.js';
+import {
+  extractZip,
+  getFolderFromList,
+  getCsvFilesArray,
+} from '../utils/files.js';
 
 import { readDataSourceHeaders } from '../models/DataSource.js';
 /**
@@ -24,7 +28,7 @@ const fetchDataSources = async (options, version) => {
   debug('>>>>>> Start fetchDataSources');
   debug(`version: ${version}`);
 
-  let zipFilePath, extracted, filesArray, headers;
+  let zipFilePath, extracted, dataFolder, filesArray, headers;
 
   try {
     zipFilePath = await maybeDownloadProduct('OpenNames', version);
@@ -46,7 +50,18 @@ const fetchDataSources = async (options, version) => {
   }
   debug(`extracted: ${extracted}`);
 
-  const dataDir = path.join(extractTarget, 'DATA');
+  try {
+    dataFolder = await getFolderFromList(extractTarget, [
+      'data',
+      'Data',
+      'DATA',
+    ]);
+  } catch (error) {
+    throw error;
+  }
+  debug(`dataFolder: ${dataFolder}`);
+
+  const dataDir = path.join(extractTarget, dataFolder);
   debug(`dataDir: ${dataDir}`);
 
   try {

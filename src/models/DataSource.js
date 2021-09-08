@@ -2,14 +2,31 @@ import fs from 'fs-extra';
 import path from 'path';
 import csv from '@fast-csv/parse';
 
+import { getFolderFromList } from '../utils/files.js';
 import { toNeo4jInteger } from '../utils/utils.js';
 
 const readDataSourceHeaders = async (dir) => {
   // console.log('>>>>>> Start readDataSourceHeaders');
+
+  let docFolder;
+
+  try {
+    docFolder = await getFolderFromList(path.resolve(dir), [
+      'doc',
+      'docs',
+      'Doc',
+      'Docs',
+      'DOC',
+      'DOCS',
+    ]);
+  } catch (error) {
+    throw error;
+  }
+
   try {
     const filePath = path.join(
       path.resolve(dir),
-      'DOC',
+      docFolder,
       'OS_Open_Names_Header.csv'
     );
     const headers = await new Promise((resolve, reject) => {
@@ -190,7 +207,7 @@ const updateDataSource = async (
   if (!properties || Object.keys(properties).length === 0) {
     throw 'updateDataSource, no properties to update';
   }
-
+  // TODO: line SET d += $properties does not set validRows as an integer. Fix.
   try {
     const result = await session.run(
       `

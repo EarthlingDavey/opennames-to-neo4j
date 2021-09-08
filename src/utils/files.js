@@ -56,6 +56,35 @@ const extractZip = async (zipFilePath, extractTarget) => {
   return true;
 };
 
+const getFolderFromList = async (dir, possibleNames) => {
+  // console.debug('>>>>>> in getFolderFromList');
+
+  try {
+    const allFiles = await fs.readdir(dir);
+
+    if (!allFiles || !allFiles.length) {
+      return null;
+    }
+
+    console.log({ allFiles });
+
+    let folder = '';
+
+    possibleNames.forEach((name) => {
+      if (allFiles.includes(name)) {
+        folder = name;
+      }
+    });
+
+    if (folder.length) return folder;
+
+    throw 'getFolderFromList: folder not found';
+  } catch (error) {
+    // console.error('error array of files was empty', { error });
+    throw error;
+  }
+};
+
 const setChmodr = (path) => {
   return new Promise((resolve, reject) => {
     chmodr(path, 0o644, (e) => {
@@ -138,6 +167,7 @@ const deleteFiles = async (files) => {
 export {
   downloadFile,
   extractZip,
+  getFolderFromList,
   getFileContents,
   getCsvFilesArray,
   deleteFile,
